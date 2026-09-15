@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "torn-elimination-bleeder-dashboard",
+  "compatibility_date": "2026-09-15",
+  "assets": {
+    "directory": "."
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "elimination-db",
+      "database_id": "9e24c068-4718-4771-bf93-2a6b1b416b96"
+    }
+  ]
+}
