@@ -407,233 +407,274 @@ export default {
     // REFRESH ALL TRACKED PLAYERS
     // PUBLIC
     // =========================================================
-    if (url.pathname === "/api/refresh-expired") {
+   // =========================================================
+// AUTOMATICALLY REFRESH PLAYERS
+// PUBLIC
+// =========================================================
 
-      try {
+if (url.pathname === "/api/refresh-expired") {
 
-        const now = Math.floor(Date.now() / 1000);
+  try {
 
-        const result = await env.DB
-          .prepare(`
-            SELECT
-              id,
-              hospital_until
-            FROM players
-            WHERE hospital_until IS NOT NULL
-              AND CAST(hospital_until AS INTEGER) <= ?
-          `)
-          .bind(now)
-          .all();
+    const now = Math.floor(Date.now() / 1000);
 
-        const playerIds =
-          result.results || [];
+    /*
+     * Check:
+     *
+     * 1. Players whose hospital timer has expired
+     *
+     * OR
+     *
+     * 2. Players who are NOT currently in hospital
+     *    and have not been checked in the last 10 seconds.
+     *
+     * This allows us to detect:
+     *
+     * Okay -> Hospital
+     *
+     * even after the previous hospital timer expired.
+     */
 
-        const refreshResults =
-          await Promise.all(
-
-            playerIds.map(
-              async (row) => {
-
-                const playerId = row.id;
-
-                try {
-
-                  const response = await fetch(
-                    "https://api.torn.com/v2/user/" +
-                    encodeURIComponent(playerId) +
-                    "?selections=profile,bounties&key=" +
-                    encodeURIComponent(
-                      env.TORN_API_KEY
-                    )
-                  );
-
-                  const data =
-                    await response.json();
-
-                  if (data.error) {
-
-                    return {
-                      id: playerId,
-                      success: false,
-                      error: data.error
-                    };
-
-                  }
-
-                  const profile =
-                    data.profile || {};
-
-                  let totalBounty = 0;
-
-                  if (
-                    Array.isArray(
-                      data.bounties
-                    )
-                  ) {
-
-                    totalBounty =
-                      data.bounties.reduce(
-                        (total, bounty) => {
-
-                          return (
-                            total +
-                            Number(
-                              bounty.reward || 0
-                            )
-                          );
-
-                        },
-                        0
-                      );
-
-                  }
-
-                  /*
-                   * IMPORTANT:
-                   *
-                   * If the player is currently in hospital,
-                   * use the new hospital timestamp.
-                   *
-                   * If the player is NOT currently in hospital,
-                   * keep the old timestamp so this player
-                   * continues to be checked.
-                   */
-
-                  const newHospitalUntil =
-                    profile.status?.state === "Hospital"
-                      ? (
-                          profile.status?.until ??
-                          row.hospital_until
-                        )
-                      : row.hospital_until;
+    const result = await env.DB
+      .prepare(`
+        SELECT
+          id,
+          hospital_until,
+          status,
+          updated_at
+        FROM players
+        WHERE
+          (
+            hospital_until IS NOT NULL
+            AND CAST(hospital_until AS INTEGER) <= ?
+          )
+          OR
+          (
+            status != 'Hospital'
+            AND datetime(updated_at) <= datetime('now', '-10 seconds')
+          )
+      `)
+      .bind(now)
+      .all();
 
 
-                  const player = {
-
-                    id:
-                      profile.id ??
-                      Number(playerId),
-
-                    name:
-                      profile.name ??
-                      "Unknown",
-
-                    bounty:
-                      totalBounty,
-
-                    last_active:
-                      profile.last_action
-                        ?.relative ?? null,
-
-                    status:
-                      profile.status
-                        ?.state ?? null,
-
-                    hospital_until:
-                      newHospitalUntil
-
-                  };
+    const playerIds =
+      result.results || [];
 
 
-                  await env.DB
-                    .prepare(`
-                      UPDATE players
-                      SET
-                        name = ?,
-                        bounty = ?,
-                        last_active = ?,
-                        hospital_until = ?,
-                        status = ?,
-                        updated_at =
-                          CURRENT_TIMESTAMP
-                      WHERE id = ?
-                    `)
-                    .bind(
-                      player.name,
-                      player.bounty,
-                      player.last_active,
-                      player.hospital_until,
-                      player.status,
-                      player.id
-                    )
-                    .run();
+    const refreshResults =
+      await Promise.all(
+
+        playerIds.map(
+          async (row) => {
+
+            const playerId = row.id;
+
+            try {
+
+              const response = await fetch(
+                "https://api.torn.com/v2/user/" +
+                encodeURIComponent(playerId) +
+                "?selections=profile,bounties&key=" +
+                encodeURIComponent(
+                  env.TORN_API_KEY
+                )
+              );
 
 
-                  return {
+              const data =
+                await response.json();
 
-                    id:
-                      player.id,
 
-                    name:
-                      player.name,
+              if (data.error) {
 
-                    bounty:
-                      player.bounty,
-
-                    hospital_until:
-                      player.hospital_until,
-
-                    status:
-                      player.status,
-
-                    success:
-                      true
-
-                  };
-
-                } catch (error) {
-
-                  return {
-
-                    id:
-                      playerId,
-
-                    success:
-                      false,
-
-                    error:
-                      error.message
-
-                  };
-
-                }
+                return {
+                  id: playerId,
+                  success: false,
+                  error: data.error
+                };
 
               }
-            )
-
-          );
 
 
-        return Response.json({
+              const profile =
+                data.profile || {};
 
-          success:
-            true,
 
-          checked:
-            playerIds.length,
+              let totalBounty = 0;
 
-          results:
-            refreshResults
 
-        });
+              if (
+                Array.isArray(
+                  data.bounties
+                )
+              ) {
 
-      } catch (error) {
+                totalBounty =
+                  data.bounties.reduce(
+                    (total, bounty) => {
 
-        return Response.json({
+                      return (
+                        total +
+                        Number(
+                          bounty.reward || 0
+                        )
+                      );
 
-          success:
-            false,
+                    },
+                    0
+                  );
 
-          error:
-            error.message
+              }
 
-        }, {
-          status: 500
-        });
 
-      }
+              /*
+               * Always use Torn's CURRENT status.
+               *
+               * If Hospital:
+               *     use the new hospital timer.
+               *
+               * If Okay:
+               *     set hospital_until to NULL.
+               *
+               * The query above will continue checking
+               * Okay players every 10 seconds.
+               */
 
-    }
+              const player = {
+
+                id:
+                  profile.id ??
+                  Number(playerId),
+
+                name:
+                  profile.name ??
+                  "Unknown",
+
+                bounty:
+                  totalBounty,
+
+                last_active:
+                  profile.last_action
+                    ?.relative ?? null,
+
+                status:
+                  profile.status
+                    ?.state ?? null,
+
+                hospital_until:
+                  profile.status
+                    ?.state === "Hospital"
+                    ? (
+                        profile.status
+                          ?.until ?? null
+                      )
+                    : null
+
+              };
+
+
+              await env.DB
+                .prepare(`
+                  UPDATE players
+                  SET
+                    name = ?,
+                    bounty = ?,
+                    last_active = ?,
+                    hospital_until = ?,
+                    status = ?,
+                    updated_at =
+                      CURRENT_TIMESTAMP
+                  WHERE id = ?
+                `)
+                .bind(
+                  player.name,
+                  player.bounty,
+                  player.last_active,
+                  player.hospital_until,
+                  player.status,
+                  player.id
+                )
+                .run();
+
+
+              return {
+
+                id:
+                  player.id,
+
+                name:
+                  player.name,
+
+                bounty:
+                  player.bounty,
+
+                hospital_until:
+                  player.hospital_until,
+
+                status:
+                  player.status,
+
+                success:
+                  true
+
+              };
+
+
+            } catch (error) {
+
+              return {
+
+                id:
+                  playerId,
+
+                success:
+                  false,
+
+                error:
+                  error.message
+
+              };
+
+            }
+
+          }
+        )
+
+      );
+
+
+    return Response.json({
+
+      success:
+        true,
+
+      checked:
+        playerIds.length,
+
+      results:
+        refreshResults
+
+    });
+
+
+  } catch (error) {
+
+    return Response.json({
+
+      success:
+        false,
+
+      error:
+        error.message
+
+    }, {
+      status: 500
+    });
+
+  }
+
+}
     if (url.pathname === "/api/refresh-players") {
 
       try {
