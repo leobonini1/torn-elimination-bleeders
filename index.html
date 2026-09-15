@@ -510,6 +510,24 @@ function renderPlayers(list) {
             "playersTable"
         );
 
+    list = [...list].sort((a, b) => {
+
+        const aHospital =
+            a.status === "Hospital" &&
+            a.hospital_until
+                ? Number(a.hospital_until)
+                : Infinity;
+
+        const bHospital =
+            b.status === "Hospital" &&
+            b.hospital_until
+                ? Number(b.hospital_until)
+                : Infinity;
+
+        return aHospital - bHospital;
+
+    });
+
 
     if (!list.length) {
 
