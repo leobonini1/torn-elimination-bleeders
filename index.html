@@ -260,11 +260,10 @@
         </div>
 
 
-        <div class="stat">
-
-            <div class="stat-title">
-                Active Recently
-            </div>
+      <div class="stat">
+    <div class="stat-value" id="bountyCount">0 / 0</div>
+    <div class="stat-label">Bountied</div>
+</div>
 
             <div
                 class="stat-value"
@@ -502,6 +501,23 @@ function renderPlayers(list) {
             "playersTable"
         );
 
+    // Update bountied / total counter
+    const bountyCount =
+        list.filter(
+            player => Number(player.bounty || 0) > 0
+        ).length;
+
+    const bountyElement =
+        document.getElementById("bountyCount");
+
+    if (bountyElement) {
+        bountyElement.textContent =
+            `${bountyCount} / ${list.length}`;
+    }
+
+    // Sort by hospital timer
+    // Players leaving hospital soonest appear first.
+    // Non-hospital players go to the bottom.
     list = [...list].sort((a, b) => {
 
         const aHospital =
@@ -517,12 +533,9 @@ function renderPlayers(list) {
                 : Infinity;
 
         return aHospital - bHospital;
-
     });
 
-
     if (!list.length) {
-
         table.innerHTML = `
             <tr>
                 <td
@@ -533,11 +546,8 @@ function renderPlayers(list) {
                 </td>
             </tr>
         `;
-
         return;
-
     }
-
 
     table.innerHTML =
         list.map(player => {
@@ -551,78 +561,67 @@ function renderPlayers(list) {
                     )
                     : null;
 
+            let hospitalText = "—";
 
-          let hospitalText = "—";
+            if (
+                player.status === "Hospital" &&
+                hospital
+            ) {
+                const remaining =
+                    hospital.getTime() - Date.now();
 
-if (
-    player.status === "Hospital" &&
-    hospital
-) {
+                if (remaining > 0) {
+                    const totalSeconds =
+                        Math.floor(
+                            remaining / 1000
+                        );
 
-    const remaining =
-        hospital.getTime() - Date.now();
+                    const hours =
+                        Math.floor(
+                            totalSeconds / 3600
+                        );
 
-    if (remaining > 0) {
+                    const minutes =
+                        Math.floor(
+                            (totalSeconds % 3600) / 60
+                        );
 
-        const totalSeconds =
-            Math.floor(remaining / 1000);
+                    const seconds =
+                        totalSeconds % 60;
 
-        const hours =
-            Math.floor(totalSeconds / 3600);
-
-        const minutes =
-            Math.floor(
-                (totalSeconds % 3600) / 60
-            );
-
-        const seconds =
-            totalSeconds % 60;
-
-
-        if (hours > 0) {
-
-            hospitalText =
-                `${hours}h ${minutes}m ${seconds}s`;
-
-        } else {
-
-            hospitalText =
-                `${minutes}m ${seconds}s`;
-
-        }
-
-    } else {
-
-        hospitalText =
-            "Finished";
-
-    }
-
-}
-
+                    if (hours > 0) {
+                        hospitalText =
+                            `${hours}h ${minutes}m ${seconds}s`;
+                    } else {
+                        hospitalText =
+                            `${minutes}m ${seconds}s`;
+                    }
+                } else {
+                    hospitalText =
+                        "Finished";
+                }
+            }
 
             const status =
                 player.status || "Unknown";
 
-
             return `
-
                 <tr>
 
                     <td class="player">
 
-                       <a
-    href="https://www.torn.com/bounties.php?p=add&XID=${player.id}"
-    target="_blank"
-    rel="noopener noreferrer"
-    style="color: ${
-        Number(player.bounty || 0) > 0
-            ? "#7ee787"
-            : "#ff7777"
-    } !important;"
->
-    ${escapeHtml(player.name)}
-</a>
+                        <a
+                            href="https://www.torn.com/bounties.php?p=add&XID=${player.id}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style="color: ${
+                                Number(player.bounty || 0) > 0
+                                    ? "#7ee787"
+                                    : "#ff7777"
+                            } !important;"
+                        >
+                            ${escapeHtml(player.name)}
+                        </a>
 
                         <button
                             class="remove-button"
@@ -639,13 +638,11 @@ if (
 
                     </td>
 
-
                     <td>
                         $${Number(
                             player.bounty || 0
                         ).toLocaleString()}
                     </td>
-
 
                     <td>
                         ${escapeHtml(
@@ -653,7 +650,6 @@ if (
                             "Unknown"
                         )}
                     </td>
-
 
                     <td
                         class="${
@@ -667,19 +663,14 @@ if (
                         )}
                     </td>
 
-
                     <td class="status">
                         ${escapeHtml(status)}
                     </td>
 
                 </tr>
-
             `;
-
         }).join("");
-
 }
-
 
 /* Update statistics */
 
