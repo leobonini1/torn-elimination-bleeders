@@ -1415,3 +1415,34 @@ setInterval(async () => {
             await loadPlayers();
 
         }
+
+    } catch (error) {
+
+        console.error(
+            "Expired player refresh failed:",
+            error
+        );
+
+    }
+
+}, 10000);
+
+
+/* Initial load */
+
+async function initialize() {
+
+    await checkAuth();
+
+    await loadPlayers();
+
+}
+
+
+initialize();
+
+</script>
+
+</body>
+
+</html>
