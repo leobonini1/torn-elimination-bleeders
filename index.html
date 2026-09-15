@@ -1,426 +1,429 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
 
-    <meta charset="UTF-8">
+```
+<meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-    <title>Elimination Dashboard</title>
+<title>Elimination Dashboard</title>
 
-    <style>
+<style>
 
-        * {
-            box-sizing: border-box;
-        }
+    * {
+        box-sizing: border-box;
+    }
 
-        body {
-            margin: 0;
-            padding: 30px;
-            background: #0f1115;
-            color: #e8e8e8;
-            font-family: Arial, sans-serif;
-        }
+    body {
+        margin: 0;
+        padding: 30px;
+        background: #0f1115;
+        color: #e8e8e8;
+        font-family: Arial, sans-serif;
+    }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 
-        h1 {
-            margin-bottom: 25px;
-        }
+    h1 {
+        margin-bottom: 25px;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns:
+            repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .stat {
+        background: #181b21;
+        border: 1px solid #292e38;
+        border-radius: 10px;
+        padding: 18px;
+    }
+
+    .stat-title {
+        color: #888;
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-size: 25px;
+        font-weight: bold;
+    }
+
+    .controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    input {
+        background: #181b21;
+        color: white;
+        border: 1px solid #303640;
+        border-radius: 7px;
+        padding: 11px 13px;
+        outline: none;
+    }
+
+    input:focus {
+        border-color: #555;
+    }
+
+    button {
+        background: #252a33;
+        color: white;
+        border: 1px solid #383f4b;
+        border-radius: 7px;
+        padding: 10px 15px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #303641;
+    }
+
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .admin-controls {
+        display: none;
+        gap: 10px;
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .login-area {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-left: auto;
+    }
+
+    .login-form {
+        display: none;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .admin-status {
+        color: #7ee787;
+        font-size: 14px;
+        display: none;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #181b21;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    th,
+    td {
+        padding: 13px 15px;
+        text-align: left;
+        border-bottom: 1px solid #292e38;
+    }
+
+    th {
+        color: #888;
+        font-size: 12px;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    .player {
+        font-weight: bold;
+    }
+
+    .player a {
+        text-decoration: none;
+    }
+
+    .player a:hover {
+        text-decoration: underline;
+    }
+
+    .remove-button {
+        margin-left: 10px;
+        padding: 5px 8px;
+        font-size: 11px;
+        display: none;
+    }
+
+    .status {
+        color: #aaa;
+    }
+
+    .hospital {
+        color: #ff7777;
+    }
+
+    .empty {
+        text-align: center;
+        padding: 30px;
+        color: #777;
+    }
+
+    @media (max-width: 800px) {
 
         .stats {
-            display: grid;
             grid-template-columns:
-                repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .stat {
-            background: #181b21;
-            border: 1px solid #292e38;
-            border-radius: 10px;
-            padding: 18px;
-        }
-
-        .stat-title {
-            color: #888;
-            font-size: 13px;
-            margin-bottom: 8px;
-        }
-
-        .stat-value {
-            font-size: 25px;
-            font-weight: bold;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        input {
-            background: #181b21;
-            color: white;
-            border: 1px solid #303640;
-            border-radius: 7px;
-            padding: 11px 13px;
-            outline: none;
-        }
-
-        input:focus {
-            border-color: #555;
-        }
-
-        button {
-            background: #252a33;
-            color: white;
-            border: 1px solid #383f4b;
-            border-radius: 7px;
-            padding: 10px 15px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #303641;
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .admin-controls {
-            display: none;
-            gap: 10px;
-            width: 100%;
-            flex-wrap: wrap;
+                repeat(2, 1fr);
         }
 
         .login-area {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-left: auto;
-        }
-
-        .login-form {
-            display: none;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .admin-status {
-            color: #7ee787;
-            font-size: 14px;
-            display: none;
-        }
-
-        table {
             width: 100%;
-            border-collapse: collapse;
-            background: #181b21;
-            border-radius: 10px;
-            overflow: hidden;
+            margin-left: 0;
         }
 
-        th,
-        td {
-            padding: 13px 15px;
-            text-align: left;
-            border-bottom: 1px solid #292e38;
-        }
+    }
 
-        th {
-            color: #888;
-            font-size: 12px;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        .player {
-            font-weight: bold;
-        }
-
-        .player a {
-            text-decoration: none;
-        }
-
-        .player a:hover {
-            text-decoration: underline;
-        }
-
-        .remove-button {
-            margin-left: 10px;
-            padding: 5px 8px;
-            font-size: 11px;
-            display: none;
-        }
-
-        .status {
-            color: #aaa;
-        }
-
-        .hospital {
-            color: #ff7777;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 30px;
-            color: #777;
-        }
-
-        @media (max-width: 800px) {
-
-            .stats {
-                grid-template-columns:
-                    repeat(2, 1fr);
-            }
-
-            .login-area {
-                width: 100%;
-                margin-left: 0;
-            }
-
-        }
-
-    </style>
+</style>
+```
 
 </head>
-
 
 <body>
 
 <div class="container">
 
-    <h1>⚡ Elimination Dashboard</h1>
+```
+<h1>⚡ Elimination Dashboard</h1>
 
 
-    <!-- Statistics -->
+<!-- Statistics -->
 
-    <div class="stats">
+<div class="stats">
 
-        <div class="stat">
+    <div class="stat">
 
-            <div class="stat-title">
-                Players Tracked
-            </div>
-
-            <div
-                class="stat-value"
-                id="playersCount"
-            >
-                0
-            </div>
-
+        <div class="stat-title">
+            Players Tracked
         </div>
 
-
-        <div class="stat">
-
-            <div class="stat-title">
-                Hospitalized
-            </div>
-
-            <div
-                class="stat-value"
-                id="hospitalCount"
-            >
-                0
-            </div>
-
-        </div>
-
-
-        <div class="stat">
-
-            <div class="stat-title">
-                Total Bounties
-            </div>
-
-            <div
-                class="stat-value"
-                id="totalBountyCount"
-            >
-                $0
-            </div>
-
-        </div>
-
-
-        <div class="stat">
-
-            <div class="stat-title">
-                Bountied
-            </div>
-
-            <div
-                class="stat-value"
-                id="bountiedCount"
-            >
-                0 / 0
-            </div>
-
+        <div
+            class="stat-value"
+            id="playersCount"
+        >
+            0
         </div>
 
     </div>
 
 
-    <!-- Controls -->
+    <div class="stat">
 
-    <div class="controls">
+        <div class="stat-title">
+            Hospitalized
+        </div>
 
         <div
-            class="admin-controls"
-            id="adminControls"
+            class="stat-value"
+            id="hospitalCount"
+        >
+            0
+        </div>
+
+    </div>
+
+
+    <div class="stat">
+
+        <div class="stat-title">
+            Total Bounties
+        </div>
+
+        <div
+            class="stat-value"
+            id="totalBountyCount"
+        >
+            $0
+        </div>
+
+    </div>
+
+
+    <div class="stat">
+
+        <div class="stat-title">
+            Bountied
+        </div>
+
+        <div
+            class="stat-value"
+            id="bountiedCount"
+        >
+            0 / 0
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Controls -->
+
+<div class="controls">
+
+    <div
+        class="admin-controls"
+        id="adminControls"
+    >
+
+        <input
+            type="text"
+            id="playerId"
+            placeholder="Enter TORN player ID..."
+        >
+
+        <button
+            onclick="addPlayer()"
+        >
+            Add Player
+        </button>
+
+    </div>
+
+
+    <button
+        onclick="refreshPlayers()"
+        id="refreshButton"
+    >
+        Refresh
+    </button>
+
+
+    <input
+        type="text"
+        id="search"
+        placeholder="Search player..."
+        oninput="filterPlayers()"
+    >
+
+
+    <div class="login-area">
+
+        <div
+            class="login-form"
+            id="loginForm"
         >
 
             <input
-                type="text"
-                id="playerId"
-                placeholder="Enter TORN player ID..."
+                type="password"
+                id="adminPassword"
+                placeholder="Admin password"
             >
 
             <button
-                onclick="addPlayer()"
+                onclick="login()"
             >
-                Add Player
+                Login
             </button>
 
         </div>
 
 
         <button
-            onclick="refreshPlayers()"
-            id="refreshButton"
+            id="loginButton"
+            onclick="showLogin()"
         >
-            Refresh
+            Admin Login
         </button>
 
 
-        <input
-            type="text"
-            id="search"
-            placeholder="Search player..."
-            oninput="filterPlayers()"
+        <span
+            class="admin-status"
+            id="adminStatus"
         >
+            ✓ Admin
+        </span>
 
 
-        <div class="login-area">
-
-            <div
-                class="login-form"
-                id="loginForm"
-            >
-
-                <input
-                    type="password"
-                    id="adminPassword"
-                    placeholder="Admin password"
-                >
-
-                <button
-                    onclick="login()"
-                >
-                    Login
-                </button>
-
-            </div>
-
-
-            <button
-                id="loginButton"
-                onclick="showLogin()"
-            >
-                Admin Login
-            </button>
-
-
-            <span
-                class="admin-status"
-                id="adminStatus"
-            >
-                ✓ Admin
-            </span>
-
-
-            <button
-                id="logoutButton"
-                onclick="logout()"
-                style="display: none;"
-            >
-                Logout
-            </button>
-
-        </div>
+        <button
+            id="logoutButton"
+            onclick="logout()"
+            style="display: none;"
+        >
+            Logout
+        </button>
 
     </div>
 
-
-    <!-- Player table -->
-
-    <table>
-
-        <thead>
-
-            <tr>
-
-                <th>
-                    PLAYER
-                </th>
-
-                <th>
-                    BOUNTY
-                </th>
-
-                <th>
-                    LAST ACTIVE
-                </th>
-
-                <th>
-                    HOSPITAL
-                </th>
-
-                <th>
-                    STATUS
-                </th>
-
-            </tr>
-
-        </thead>
-
-
-        <tbody id="playersTable">
-
-            <tr>
-
-                <td
-                    colspan="5"
-                    class="empty"
-                >
-                    Loading...
-                </td>
-
-            </tr>
-
-        </tbody>
-
-    </table>
-
 </div>
 
+
+<!-- Player table -->
+
+<table>
+
+    <thead>
+
+        <tr>
+
+            <th>
+                PLAYER
+            </th>
+
+            <th>
+                BOUNTY
+            </th>
+
+            <th>
+                LAST ACTIVE
+            </th>
+
+            <th>
+                HOSPITAL
+            </th>
+
+            <th>
+                STATUS
+            </th>
+
+        </tr>
+
+    </thead>
+
+
+    <tbody id="playersTable">
+
+        <tr>
+
+            <td
+                colspan="5"
+                class="empty"
+            >
+                Loading...
+            </td>
+
+        </tr>
+
+    </tbody>
+
+</table>
+```
+
+</div>
 
 <script>
 
@@ -449,11 +452,24 @@ async function loadPlayers() {
 
     try {
 
+        /*
+         * Cache-busting is intentional.
+         * We always want the newest database data.
+         */
+
         const response =
-            await fetch("/api/players");
+            await fetch(
+                "/api/players?_=" +
+                Date.now(),
+                {
+                    cache: "no-store"
+                }
+            );
+
 
         const data =
             await response.json();
+
 
         if (!data.success) {
 
@@ -464,16 +480,20 @@ async function loadPlayers() {
 
         }
 
+
         players =
             data.players || [];
+
 
         renderPlayers(players);
 
         updateStats();
 
+
     } catch (error) {
 
         console.error(error);
+
 
         document.getElementById(
             "playersTable"
@@ -516,11 +536,13 @@ function renderPlayers(list) {
                 ? Number(a.hospital_until)
                 : Infinity;
 
+
         const bHospital =
             b.status === "Hospital" &&
             b.hospital_until
                 ? Number(b.hospital_until)
                 : Infinity;
+
 
         return aHospital - bHospital;
 
@@ -552,8 +574,8 @@ function renderPlayers(list) {
 
 
             /*
-             * Only show a timer when Torn says
-             * the player is currently hospitalized.
+             * Only show the countdown when the
+             * player is currently in Hospital.
              */
 
             if (
@@ -569,7 +591,8 @@ function renderPlayers(list) {
 
 
                 /*
-                 * Make sure the timestamp is valid.
+                 * Torn's hospital_until is expected
+                 * to be a Unix timestamp in seconds.
                  */
 
                 if (
@@ -627,10 +650,9 @@ function renderPlayers(list) {
                     } else {
 
                         /*
-                         * The local countdown has expired.
-                         *
-                         * The backend refresh will shortly
-                         * ask Torn for the player's new status.
+                         * Do not permanently show Finished.
+                         * The next backend refresh will ask
+                         * Torn for the player's current status.
                          */
 
                         hospitalText =
@@ -737,19 +759,11 @@ function renderPlayers(list) {
 
 function updateStats() {
 
-    /*
-     * Total number of tracked players
-     */
-
     document.getElementById(
         "playersCount"
     ).textContent =
         players.length;
 
-
-    /*
-     * Number of hospitalized players
-     */
 
     document.getElementById(
         "hospitalCount"
@@ -759,10 +773,6 @@ function updateStats() {
                 player.status === "Hospital"
         ).length;
 
-
-    /*
-     * Total value of all bounties
-     */
 
     const totalBounty =
         players.reduce(
@@ -781,11 +791,6 @@ function updateStats() {
         "$" +
         totalBounty.toLocaleString();
 
-
-    /*
-     * Number of players with at least
-     * one bounty / total players
-     */
 
     const bountiedPlayers =
         players.filter(
@@ -848,7 +853,11 @@ async function checkAuth() {
 
         const response =
             await fetch(
-                "/api/auth-status"
+                "/api/auth-status?_=" +
+                Date.now(),
+                {
+                    cache: "no-store"
+                }
             );
 
 
@@ -1299,7 +1308,11 @@ async function refreshPlayers() {
 
         const response =
             await fetch(
-                "/api/refresh-players"
+                "/api/refresh-players?_=" +
+                Date.now(),
+                {
+                    cache: "no-store"
+                }
             );
 
 
@@ -1349,7 +1362,13 @@ async function refreshPlayers() {
 }
 
 
-/* Update hospital countdown every second */
+/*
+ * Update the visible countdown every second.
+ *
+ * This does NOT contact Torn.
+ * It only recalculates the remaining time
+ * using the timestamp already stored in players.
+ */
 
 setInterval(() => {
 
@@ -1362,7 +1381,13 @@ setInterval(() => {
 }, 1000);
 
 
-/* Check players whose hospital timer has expired */
+/*
+ * Ask the backend to refresh players whose
+ * hospital information needs updating.
+ *
+ * Cache is disabled because we need the
+ * newest database/API result.
+ */
 
 setInterval(async () => {
 
@@ -1370,7 +1395,11 @@ setInterval(async () => {
 
         const response =
             await fetch(
-                "/api/refresh-expired"
+                "/api/refresh-expired?_=" +
+                Date.now(),
+                {
+                    cache: "no-store"
+                }
             );
 
 
@@ -1386,34 +1415,3 @@ setInterval(async () => {
             await loadPlayers();
 
         }
-
-    } catch (error) {
-
-        console.error(
-            "Expired player refresh failed:",
-            error
-        );
-
-    }
-
-}, 10000);
-
-
-/* Initial load */
-
-async function initialize() {
-
-    await checkAuth();
-
-    await loadPlayers();
-
-}
-
-
-initialize();
-
-</script>
-
-</body>
-
-</html>
