@@ -154,12 +154,12 @@
         }
 
         .player a {
-    text-decoration: none;
-}
+            text-decoration: none;
+        }
 
-.player a:hover {
-    text-decoration: underline;
-}
+        .player a:hover {
+            text-decoration: underline;
+        }
 
         .remove-button {
             margin-left: 10px;
@@ -252,7 +252,7 @@
 
             <div
                 class="stat-value"
-                id="bountyCount"
+                id="totalBountyCount"
             >
                 $0
             </div>
@@ -260,16 +260,17 @@
         </div>
 
 
-      <div class="stat">
-    <div class="stat-value" id="bountyCount">0 / 0</div>
-    <div class="stat-label">Bountied</div>
-</div>
+        <div class="stat">
+
+            <div class="stat-title">
+                Bountied
+            </div>
 
             <div
                 class="stat-value"
-                id="activeCount"
+                id="bountiedCount"
             >
-                0
+                0 / 0
             </div>
 
         </div>
@@ -501,23 +502,17 @@ function renderPlayers(list) {
             "playersTable"
         );
 
-    // Update bountied / total counter
-    const bountyCount =
-        list.filter(
-            player => Number(player.bounty || 0) > 0
-        ).length;
 
-    const bountyElement =
-        document.getElementById("bountyCount");
+    /*
+     * Sort by hospital timer.
+     *
+     * Players currently in hospital are sorted
+     * by who leaves hospital first.
+     *
+     * Players not in hospital are placed at
+     * the bottom.
+     */
 
-    if (bountyElement) {
-        bountyElement.textContent =
-            `${bountyCount} / ${list.length}`;
-    }
-
-    // Sort by hospital timer
-    // Players leaving hospital soonest appear first.
-    // Non-hospital players go to the bottom.
     list = [...list].sort((a, b) => {
 
         const aHospital =
@@ -533,9 +528,12 @@ function renderPlayers(list) {
                 : Infinity;
 
         return aHospital - bHospital;
+
     });
 
+
     if (!list.length) {
+
         table.innerHTML = `
             <tr>
                 <td
@@ -546,8 +544,11 @@ function renderPlayers(list) {
                 </td>
             </tr>
         `;
+
         return;
+
     }
+
 
     table.innerHTML =
         list.map(player => {
@@ -561,49 +562,70 @@ function renderPlayers(list) {
                     )
                     : null;
 
+
             let hospitalText = "—";
+
 
             if (
                 player.status === "Hospital" &&
                 hospital
             ) {
+
                 const remaining =
-                    hospital.getTime() - Date.now();
+                    hospital.getTime() -
+                    Date.now();
+
 
                 if (remaining > 0) {
+
                     const totalSeconds =
                         Math.floor(
                             remaining / 1000
                         );
+
 
                     const hours =
                         Math.floor(
                             totalSeconds / 3600
                         );
 
+
                     const minutes =
                         Math.floor(
                             (totalSeconds % 3600) / 60
                         );
 
+
                     const seconds =
                         totalSeconds % 60;
 
+
                     if (hours > 0) {
+
                         hospitalText =
                             `${hours}h ${minutes}m ${seconds}s`;
+
                     } else {
+
                         hospitalText =
                             `${minutes}m ${seconds}s`;
+
                     }
+
                 } else {
+
                     hospitalText =
                         "Finished";
+
                 }
+
             }
 
+
             const status =
-                player.status || "Unknown";
+                player.status ||
+                "Unknown";
+
 
             return `
                 <tr>
@@ -623,6 +645,7 @@ function renderPlayers(list) {
                             ${escapeHtml(player.name)}
                         </a>
 
+
                         <button
                             class="remove-button"
                             data-player-id="${player.id}"
@@ -638,18 +661,25 @@ function renderPlayers(list) {
 
                     </td>
 
+
                     <td>
+
                         $${Number(
                             player.bounty || 0
                         ).toLocaleString()}
+
                     </td>
 
+
                     <td>
+
                         ${escapeHtml(
                             player.last_active ||
                             "Unknown"
                         )}
+
                     </td>
+
 
                     <td
                         class="${
@@ -658,29 +688,47 @@ function renderPlayers(list) {
                                 : ""
                         }"
                     >
+
                         ${escapeHtml(
                             hospitalText
                         )}
+
                     </td>
 
+
                     <td class="status">
-                        ${escapeHtml(status)}
+
+                        ${escapeHtml(
+                            status
+                        )}
+
                     </td>
 
                 </tr>
             `;
+
         }).join("");
+
 }
+
 
 /* Update statistics */
 
 function updateStats() {
+
+    /*
+     * Total number of tracked players
+     */
 
     document.getElementById(
         "playersCount"
     ).textContent =
         players.length;
 
+
+    /*
+     * Number of hospitalized players
+     */
 
     document.getElementById(
         "hospitalCount"
@@ -690,6 +738,10 @@ function updateStats() {
                 player.status === "Hospital"
         ).length;
 
+
+    /*
+     * Total value of all bounties
+     */
 
     const totalBounty =
         players.reduce(
@@ -703,22 +755,30 @@ function updateStats() {
 
 
     document.getElementById(
-        "bountyCount"
+        "totalBountyCount"
     ).textContent =
         "$" +
         totalBounty.toLocaleString();
 
 
-    document.getElementById(
-        "activeCount"
-    ).textContent =
+    /*
+     * Number of players with at least
+     * one bounty / total players
+     */
+
+    const bountiedPlayers =
         players.filter(
             player =>
-                player.last_active &&
-                !player.last_active
-                    .toLowerCase()
-                    .includes("day")
+                Number(
+                    player.bounty || 0
+                ) > 0
         ).length;
+
+
+    document.getElementById(
+        "bountiedCount"
+    ).textContent =
+        `${bountiedPlayers} / ${players.length}`;
 
 }
 
@@ -770,12 +830,15 @@ async function checkAuth() {
                 "/api/auth-status"
             );
 
+
         const data =
             await response.json();
+
 
         setAdminState(
             data.admin === true
         );
+
 
     } catch (error) {
 
@@ -783,6 +846,7 @@ async function checkAuth() {
             "Auth check failed:",
             error
         );
+
 
         setAdminState(false);
 
@@ -801,25 +865,33 @@ function setAdminState(admin) {
     document.getElementById(
         "adminControls"
     ).style.display =
-        admin ? "flex" : "none";
+        admin
+            ? "flex"
+            : "none";
 
 
     document.getElementById(
         "loginButton"
     ).style.display =
-        admin ? "none" : "inline-block";
+        admin
+            ? "none"
+            : "inline-block";
 
 
     document.getElementById(
         "adminStatus"
     ).style.display =
-        admin ? "inline" : "none";
+        admin
+            ? "inline"
+            : "none";
 
 
     document.getElementById(
         "logoutButton"
     ).style.display =
-        admin ? "inline-block" : "none";
+        admin
+            ? "inline-block"
+            : "none";
 
 
     document.getElementById(
@@ -841,12 +913,14 @@ function showLogin() {
 
     document.getElementById(
         "loginButton"
-    ).style.display = "none";
+    ).style.display =
+        "none";
 
 
     document.getElementById(
         "loginForm"
-    ).style.display = "flex";
+    ).style.display =
+        "flex";
 
 
     document.getElementById(
@@ -902,7 +976,8 @@ async function login() {
             await response.json();
 
 
-        if (!response.ok ||
+        if (
+            !response.ok ||
             !data.success
         ) {
 
@@ -925,6 +1000,7 @@ async function login() {
     } catch (error) {
 
         console.error(error);
+
 
         alert(
             "Login failed: " +
@@ -1036,6 +1112,7 @@ async function addPlayer() {
 
             setAdminState(false);
 
+
             throw new Error(
                 "Your admin session has expired."
             );
@@ -1067,6 +1144,7 @@ async function addPlayer() {
     } catch (error) {
 
         console.error(error);
+
 
         alert(
             "Failed to add player: " +
@@ -1143,6 +1221,7 @@ async function removePlayer(
 
             setAdminState(false);
 
+
             throw new Error(
                 "Your admin session has expired."
             );
@@ -1167,6 +1246,7 @@ async function removePlayer(
 
         console.error(error);
 
+
         alert(
             "Failed to remove player: " +
             error.message
@@ -1188,6 +1268,7 @@ async function refreshPlayers() {
 
 
     button.disabled = true;
+
 
     button.textContent =
         "Refreshing...";
@@ -1227,6 +1308,7 @@ async function refreshPlayers() {
 
         console.error(error);
 
+
         alert(
             "Failed to refresh players: " +
             error.message
@@ -1236,6 +1318,7 @@ async function refreshPlayers() {
     } finally {
 
         button.disabled = false;
+
 
         button.textContent =
             "Refresh";
@@ -1269,8 +1352,10 @@ setInterval(async () => {
                 "/api/refresh-expired"
             );
 
+
         const data =
             await response.json();
+
 
         if (
             data.success &&
