@@ -407,7 +407,188 @@ export default {
     // REFRESH ALL TRACKED PLAYERS
     // PUBLIC
     // =========================================================
+    if (url.pathname === "/api/refresh-expired") {
 
+      try {
+
+        const now = Math.floor(Date.now() / 1000);
+
+        const result = await env.DB
+          .prepare(`
+            SELECT id
+            FROM players
+            WHERE hospital_until IS NOT NULL
+              AND CAST(hospital_until AS INTEGER) <= ?
+          `)
+          .bind(now)
+          .all();
+
+        const playerIds =
+          result.results || [];
+
+        const refreshResults =
+          await Promise.all(
+
+            playerIds.map(
+              async (row) => {
+
+                const playerId = row.id;
+
+                try {
+
+                  const response = await fetch(
+                    "https://api.torn.com/v2/user/" +
+                    encodeURIComponent(playerId) +
+                    "?selections=profile,bounties&key=" +
+                    encodeURIComponent(
+                      env.TORN_API_KEY
+                    )
+                  );
+
+                  const data =
+                    await response.json();
+
+                  if (data.error) {
+
+                    return {
+                      id: playerId,
+                      success: false,
+                      error: data.error
+                    };
+
+                  }
+
+                  const profile =
+                    data.profile || {};
+
+                  let totalBounty = 0;
+
+                  if (
+                    Array.isArray(
+                      data.bounties
+                    )
+                  ) {
+
+                    totalBounty =
+                      data.bounties.reduce(
+                        (total, bounty) => {
+
+                          return (
+                            total +
+                            Number(
+                              bounty.reward || 0
+                            )
+                          );
+
+                        },
+                        0
+                      );
+
+                  }
+
+                  const player = {
+
+                    id:
+                      profile.id ??
+                      Number(playerId),
+
+                    name:
+                      profile.name ??
+                      "Unknown",
+
+                    bounty:
+                      totalBounty,
+
+                    last_active:
+                      profile.last_action
+                        ?.relative ?? null,
+
+                    status:
+                      profile.status
+                        ?.state ?? null,
+
+                    hospital_until:
+                      profile.status
+                        ?.until ?? null
+
+                  };
+
+                  await env.DB
+                    .prepare(`
+                      UPDATE players
+                      SET
+                        name = ?,
+                        bounty = ?,
+                        last_active = ?,
+                        hospital_until = ?,
+                        status = ?,
+                        updated_at =
+                          CURRENT_TIMESTAMP
+                      WHERE id = ?
+                    `)
+                    .bind(
+                      player.name,
+                      player.bounty,
+                      player.last_active,
+                      player.hospital_until,
+                      player.status,
+                      player.id
+                    )
+                    .run();
+
+                  return {
+
+                    id: player.id,
+                    name: player.name,
+                    bounty: player.bounty,
+                    hospital_until:
+                      player.hospital_until,
+                    status:
+                      player.status,
+                    success: true
+
+                  };
+
+                } catch (error) {
+
+                  return {
+
+                    id: playerId,
+                    success: false,
+                    error:
+                      error.message
+
+                  };
+
+                }
+
+              }
+            )
+
+          );
+
+        return Response.json({
+
+          success: true,
+          checked: playerIds.length,
+          results: refreshResults
+
+        });
+
+      } catch (error) {
+
+        return Response.json({
+
+          success: false,
+          error: error.message
+
+        }, {
+          status: 500
+        });
+
+      }
+
+    }
     if (url.pathname === "/api/refresh-players") {
 
       try {
