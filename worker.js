@@ -87,7 +87,7 @@ export default {
           }, { status: 400 });
         }
 
-        // Request profile and bounties together using API v2
+        // Request profile and bounties using API v2
         const response = await fetch(
           "https://api.torn.com/v2/user/" +
           encodeURIComponent(playerId) +
@@ -113,26 +113,27 @@ export default {
           }, 0);
         }
 
+        // Convert undefined values to null before using D1
         const player = {
-          id: data.player_id,
-          name: data.name,
-          level: data.level,
+          id: data.player_id ?? Number(playerId),
+          name: data.name ?? null,
+          level: data.level ?? null,
 
           bounty: totalBounty,
 
-          last_active: data.last_action?.relative || null,
-          last_active_status: data.last_action?.status || null,
-          last_active_timestamp: data.last_action?.timestamp || null,
+          last_active: data.last_action?.relative ?? null,
+          last_active_status: data.last_action?.status ?? null,
+          last_active_timestamp: data.last_action?.timestamp ?? null,
 
-          status: data.status?.state || null,
-          status_description: data.status?.description || null,
-          hospital_until: data.status?.until || null,
+          status: data.status?.state ?? null,
+          status_description: data.status?.description ?? null,
+          hospital_until: data.status?.until ?? null,
 
           elimination: data.competition?.name === "Elimination"
             ? {
-                score: data.competition.score || 0,
-                team: data.competition.team || null,
-                attacks: data.competition.attacks || 0
+                score: data.competition?.score ?? 0,
+                team: data.competition?.team ?? null,
+                attacks: data.competition?.attacks ?? 0
               }
             : null
         };
@@ -185,4 +186,3 @@ export default {
     return env.ASSETS.fetch(request);
   }
 };
-
