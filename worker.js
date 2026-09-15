@@ -21,7 +21,7 @@ export default {
       }
     }
 
-    // Check TORN API secret
+    // Check that the TORN API secret is available
     if (url.pathname === "/api/check-secret") {
       const key = env.TORN_API_KEY;
 
@@ -74,43 +74,43 @@ export default {
         }, { status: 500 });
       }
     }
-    
-    Get information for a specific player
-if (url.pathname.startsWith("/api/player/")) {
-  try {
-    const playerId = url.pathname.split("/").pop();
 
-    if (!/^\d+$/.test(playerId)) {
-      return Response.json({
-        success: false,
-        error: "Invalid player ID"
-      }, { status: 400 });
+    // Get information for a specific player
+    if (url.pathname.startsWith("/api/player/")) {
+      try {
+        const playerId = url.pathname.split("/").pop();
+
+        if (!/^\d+$/.test(playerId)) {
+          return Response.json({
+            success: false,
+            error: "Invalid player ID"
+          }, { status: 400 });
+        }
+
+        const response = await fetch(
+          "https://api.torn.com/user/" +
+          encodeURIComponent(playerId) +
+          "?selections=basic&key=" +
+          encodeURIComponent(env.TORN_API_KEY)
+        );
+
+        const data = await response.json();
+
+        return Response.json({
+          success: true,
+          raw: data
+        });
+
+      } catch (error) {
+        return Response.json({
+          success: false,
+          error: error.message
+        }, { status: 500 });
+      }
     }
-
-    const response = await fetch(
-      "https://api.torn.com/user/" +
-      encodeURIComponent(playerId) +
-      "?selections=basic&key=" +
-      encodeURIComponent(env.TORN_API_KEY)
-    );
-
-    const data = await response.json();
-
-    return Response.json({
-      success: true,
-      raw: data
-    });
-
-  } catch (error) {
-    return Response.json({
-      success: false,
-      error: error.message
-    }, { status: 500 });
-  }
-}
-
 
     // Serve dashboard
     return env.ASSETS.fetch(request);
   }
 };
+
