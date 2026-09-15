@@ -37,7 +37,7 @@ export default {
     if (url.pathname === "/api/test-torn") {
       try {
         const response = await fetch(
-          "https://api.torn.com/user/?selections=profile&key=" +
+          "https://api.torn.com/user/?selections=basic&key=" +
           encodeURIComponent(env.TORN_API_KEY)
         );
 
@@ -90,14 +90,44 @@ export default {
         const response = await fetch(
           "https://api.torn.com/user/" +
           encodeURIComponent(playerId) +
-          "?selections=basic&key=" +
+          "?selections=profile&key=" +
           encodeURIComponent(env.TORN_API_KEY)
         );
 
         const data = await response.json();
 
+        if (data.error) {
+          return Response.json({
+            success: false,
+            error: data.error
+          }, { status: 400 });
+        }
+
         return Response.json({
           success: true,
+          player: {
+            id: data.player_id,
+            name: data.name,
+            level: data.level,
+
+            last_active: data.last_action?.relative || null,
+            last_active_status: data.last_action?.status || null,
+            last_active_timestamp: data.last_action?.timestamp || null,
+
+            status: data.status?.state || null,
+            status_description: data.status?.description || null,
+            hospital_until: data.status?.until || null,
+
+            elimination: data.competition?.name === "Elimination"
+              ? {
+                  score: data.competition.score || 0,
+                  team: data.competition.team || null,
+                  attacks: data.competition.attacks || 0
+                }
+              : null
+          },
+
+          // Keep the original TORN response available for debugging
           raw: data
         });
 
@@ -113,4 +143,3 @@ export default {
     return env.ASSETS.fetch(request);
   }
 };
-
