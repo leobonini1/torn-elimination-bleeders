@@ -535,9 +535,12 @@ function renderPlayers(list) {
                     : null;
 
 
-           let hospitalText = "—";
+          let hospitalText = "—";
 
-if (hospital) {
+if (
+    player.status === "Hospital" &&
+    hospital
+) {
 
     const remaining =
         hospital.getTime() - Date.now();
