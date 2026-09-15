@@ -415,7 +415,9 @@ export default {
 
         const result = await env.DB
           .prepare(`
-            SELECT id
+            SELECT
+              id,
+              hospital_until
             FROM players
             WHERE hospital_until IS NOT NULL
               AND CAST(hospital_until AS INTEGER) <= ?
@@ -486,6 +488,26 @@ export default {
 
                   }
 
+                  /*
+                   * IMPORTANT:
+                   *
+                   * If the player is currently in hospital,
+                   * use the new hospital timestamp.
+                   *
+                   * If the player is NOT currently in hospital,
+                   * keep the old timestamp so this player
+                   * continues to be checked.
+                   */
+
+                  const newHospitalUntil =
+                    profile.status?.state === "Hospital"
+                      ? (
+                          profile.status?.until ??
+                          row.hospital_until
+                        )
+                      : row.hospital_until;
+
+
                   const player = {
 
                     id:
@@ -508,10 +530,10 @@ export default {
                         ?.state ?? null,
 
                     hospital_until:
-                      profile.status
-                        ?.until ?? null
+                      newHospitalUntil
 
                   };
+
 
                   await env.DB
                     .prepare(`
@@ -536,16 +558,26 @@ export default {
                     )
                     .run();
 
+
                   return {
 
-                    id: player.id,
-                    name: player.name,
-                    bounty: player.bounty,
+                    id:
+                      player.id,
+
+                    name:
+                      player.name,
+
+                    bounty:
+                      player.bounty,
+
                     hospital_until:
                       player.hospital_until,
+
                     status:
                       player.status,
-                    success: true
+
+                    success:
+                      true
 
                   };
 
@@ -553,8 +585,12 @@ export default {
 
                   return {
 
-                    id: playerId,
-                    success: false,
+                    id:
+                      playerId,
+
+                    success:
+                      false,
+
                     error:
                       error.message
 
@@ -567,11 +603,17 @@ export default {
 
           );
 
+
         return Response.json({
 
-          success: true,
-          checked: playerIds.length,
-          results: refreshResults
+          success:
+            true,
+
+          checked:
+            playerIds.length,
+
+          results:
+            refreshResults
 
         });
 
@@ -579,8 +621,11 @@ export default {
 
         return Response.json({
 
-          success: false,
-          error: error.message
+          success:
+            false,
+
+          error:
+            error.message
 
         }, {
           status: 500
