@@ -1071,7 +1071,7 @@ export default {
             .all();
 
 
-       const MAX_REFRESHES_PER_RUN = 10;
+       const MAX_REFRESHES_PER_RUN = 3;
 
 const playerIds =
     (result.results || []).slice(0, MAX_REFRESHES_PER_RUN);
