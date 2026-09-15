@@ -37,7 +37,7 @@ export default {
     if (url.pathname === "/api/test-torn") {
       try {
         const response = await fetch(
-          "https://api.torn.com/user/?selections=basic&key=" +
+          "https://api.torn.com/user/?selections=profile&key=" +
           encodeURIComponent(env.TORN_API_KEY)
         );
 
