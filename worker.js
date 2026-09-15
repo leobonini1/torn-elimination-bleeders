@@ -168,10 +168,10 @@ if (url.pathname.startsWith("/api/remove-player/")) {
         let totalBounty = 0;
 
         if (Array.isArray(data.bounties)) {
-          totalBounty = data.bounties.reduce((total, bounty) => {
-            return total + Number(bounty.amount || 0);
-          }, 0);
-        }
+  totalBounty = data.bounties.reduce((total, bounty) => {
+    return total + Number(bounty.reward || 0);
+  }, 0);
+}
 
         const player = {
           id: profile.id ?? Number(playerId),
