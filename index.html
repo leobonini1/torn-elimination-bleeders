@@ -10,6 +10,18 @@
         * {
             box-sizing: border-box;
         }
+        button {
+    background: #292d31;
+    border: 1px solid #3a3f44;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #34393e;
+}
 
         body {
             margin: 0;
@@ -201,14 +213,24 @@
 
     <div class="controls">
 
-        <input
-            type="text"
-            id="search"
-            placeholder="Search player..."
-            oninput="filterPlayers()"
-        >
+    <input
+        type="text"
+        id="playerId"
+        placeholder="Enter TORN player ID..."
+    >
 
-    </div>
+    <button onclick="addPlayer()">
+        Add Player
+    </button>
+
+    <input
+        type="text"
+        id="search"
+        placeholder="Search player..."
+        oninput="filterPlayers()"
+    >
+
+</div>
 
 
     <div class="table-container">
