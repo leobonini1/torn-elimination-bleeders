@@ -74,6 +74,19 @@ button:hover {
             font-size: 26px;
             font-weight: bold;
         }
+        .remove-button {
+    margin-left: 10px;
+    padding: 6px 10px;
+    font-size: 12px;
+    background: #1b1e21;
+    border: 1px solid #555;
+    color: #aaa;
+}
+
+.remove-button:hover {
+    background: #333;
+    color: white;
+}
 
         .controls {
             display: flex;
@@ -343,9 +356,15 @@ function renderPlayers(playerList) {
         return `
             <tr>
 
-                <td class="player">
-                    ${escapeHtml(player.name)}
-                </td>
+              <td class="player">
+    ${escapeHtml(player.name)}
+    <button
+        class="remove-button"
+        onclick="removePlayer(${player.id})"
+    >
+        Remove
+    </button>
+</td>
 
                 <td class="bounty">
                     $${bounty.toLocaleString()}
