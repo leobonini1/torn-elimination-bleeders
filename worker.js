@@ -104,35 +104,179 @@ export default {
         }, { status: 500 });
       }
     }
-// Remove a player from D1
-if (url.pathname.startsWith("/api/remove-player/")) {
-  try {
-    const playerId = url.pathname.split("/").pop();
 
-    if (!/^\d+$/.test(playerId)) {
-      return Response.json({
-        success: false,
-        error: "Invalid player ID"
-      }, { status: 400 });
+    // Refresh all tracked players from TORN
+    if (url.pathname === "/api/refresh-players") {
+      try {
+        // Get all tracked player IDs
+        const result = await env.DB
+          .prepare("SELECT id FROM players")
+          .all();
+
+        const playerIds = result.results || [];
+
+        // Refresh players in parallel
+        const refreshResults = await Promise.all(
+          playerIds.map(async (row) => {
+
+            const playerId = row.id;
+
+            try {
+
+              const response = await fetch(
+                "https://api.torn.com/v2/user/" +
+                encodeURIComponent(playerId) +
+                "?selections=profile,bounties&key=" +
+                encodeURIComponent(env.TORN_API_KEY)
+              );
+
+              const data = await response.json();
+
+              if (data.error) {
+                return {
+                  id: playerId,
+                  success: false,
+                  error: data.error
+                };
+              }
+
+              const profile = data.profile || {};
+
+              // Calculate total bounty
+              let totalBounty = 0;
+
+              if (Array.isArray(data.bounties)) {
+                totalBounty = data.bounties.reduce(
+                  (total, bounty) => {
+                    return total + Number(bounty.reward || 0);
+                  },
+                  0
+                );
+              }
+
+              const player = {
+                id: profile.id ?? Number(playerId),
+                name: profile.name ?? "Unknown",
+
+                bounty: totalBounty,
+
+                last_active:
+                  profile.last_action?.relative ?? null,
+
+                last_active_status:
+                  profile.last_action?.status ?? null,
+
+                last_active_timestamp:
+                  profile.last_action?.timestamp ?? null,
+
+                status:
+                  profile.status?.state ?? null,
+
+                status_description:
+                  profile.status?.description ?? null,
+
+                hospital_until:
+                  profile.status?.until ?? null
+              };
+
+              // Update D1
+              await env.DB
+                .prepare(`
+                  UPDATE players
+                  SET
+                    name = ?,
+                    bounty = ?,
+                    last_active = ?,
+                    hospital_until = ?,
+                    status = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                  WHERE id = ?
+                `)
+                .bind(
+                  player.name,
+                  player.bounty,
+                  player.last_active,
+                  player.hospital_until,
+                  player.status,
+                  player.id
+                )
+                .run();
+
+              return {
+                id: player.id,
+                name: player.name,
+                bounty: player.bounty,
+                success: true
+              };
+
+            } catch (error) {
+
+              return {
+                id: playerId,
+                success: false,
+                error: error.message
+              };
+
+            }
+
+          })
+        );
+
+        const successful = refreshResults.filter(
+          result => result.success
+        ).length;
+
+        const failed = refreshResults.filter(
+          result => !result.success
+        ).length;
+
+        return Response.json({
+          success: true,
+          refreshed: successful,
+          failed: failed,
+          results: refreshResults
+        });
+
+      } catch (error) {
+
+        return Response.json({
+          success: false,
+          error: error.message
+        }, { status: 500 });
+
+      }
     }
 
-    await env.DB
-      .prepare("DELETE FROM players WHERE id = ?")
-      .bind(Number(playerId))
-      .run();
+    // Remove a player from D1
+    if (url.pathname.startsWith("/api/remove-player/")) {
+      try {
+        const playerId = url.pathname.split("/").pop();
 
-    return Response.json({
-      success: true,
-      id: Number(playerId)
-    });
+        if (!/^\d+$/.test(playerId)) {
+          return Response.json({
+            success: false,
+            error: "Invalid player ID"
+          }, { status: 400 });
+        }
 
-  } catch (error) {
-    return Response.json({
-      success: false,
-      error: error.message
-    }, { status: 500 });
-  }
-}
+        await env.DB
+          .prepare("DELETE FROM players WHERE id = ?")
+          .bind(Number(playerId))
+          .run();
+
+        return Response.json({
+          success: true,
+          id: Number(playerId)
+        });
+
+      } catch (error) {
+        return Response.json({
+          success: false,
+          error: error.message
+        }, { status: 500 });
+      }
+    }
+
     // Get information for a specific player
     if (url.pathname.startsWith("/api/player/")) {
       try {
@@ -168,10 +312,10 @@ if (url.pathname.startsWith("/api/remove-player/")) {
         let totalBounty = 0;
 
         if (Array.isArray(data.bounties)) {
-  totalBounty = data.bounties.reduce((total, bounty) => {
-    return total + Number(bounty.reward || 0);
-  }, 0);
-}
+          totalBounty = data.bounties.reduce((total, bounty) => {
+            return total + Number(bounty.reward || 0);
+          }, 0);
+        }
 
         const player = {
           id: profile.id ?? Number(playerId),
@@ -180,21 +324,32 @@ if (url.pathname.startsWith("/api/remove-player/")) {
 
           bounty: totalBounty,
 
-          last_active: profile.last_action?.relative ?? null,
-          last_active_status: profile.last_action?.status ?? null,
-          last_active_timestamp: profile.last_action?.timestamp ?? null,
+          last_active:
+            profile.last_action?.relative ?? null,
 
-          status: profile.status?.state ?? null,
-          status_description: profile.status?.description ?? null,
-          hospital_until: profile.status?.until ?? null,
+          last_active_status:
+            profile.last_action?.status ?? null,
 
-          elimination: profile.competition?.name === "Elimination"
-            ? {
-                score: profile.competition.score ?? 0,
-                team: profile.competition.team ?? null,
-                attacks: profile.competition.attacks ?? 0
-              }
-            : null
+          last_active_timestamp:
+            profile.last_action?.timestamp ?? null,
+
+          status:
+            profile.status?.state ?? null,
+
+          status_description:
+            profile.status?.description ?? null,
+
+          hospital_until:
+            profile.status?.until ?? null,
+
+          elimination:
+            profile.competition?.name === "Elimination"
+              ? {
+                  score: profile.competition.score ?? 0,
+                  team: profile.competition.team ?? null,
+                  attacks: profile.competition.attacks ?? 0
+                }
+              : null
         };
 
         // Save player to D1
