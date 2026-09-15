@@ -75,6 +75,36 @@ export default {
       }
     }
 
+    // Get all saved players from D1
+    if (url.pathname === "/api/players") {
+      try {
+        const result = await env.DB
+          .prepare(`
+            SELECT
+              id,
+              name,
+              bounty,
+              last_active,
+              hospital_until,
+              status,
+              updated_at
+            FROM players
+            ORDER BY name ASC
+          `)
+          .all();
+
+        return Response.json({
+          success: true,
+          players: result.results
+        });
+      } catch (error) {
+        return Response.json({
+          success: false,
+          error: error.message
+        }, { status: 500 });
+      }
+    }
+
     // Get information for a specific player
     if (url.pathname.startsWith("/api/player/")) {
       try {
@@ -104,7 +134,6 @@ export default {
           }, { status: 400 });
         }
 
-        // The API v2 profile data is inside data.profile
         const profile = data.profile || {};
 
         // Calculate total bounty
