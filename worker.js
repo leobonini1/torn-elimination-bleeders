@@ -791,81 +791,115 @@ export default {
         const rows =
           result.results || [];
 
+const MAX_REFRESHES_PER_RUN = 3;
 
-        const playersToRefresh =
-          rows.filter(
-            (player) => {
+const playersToRefresh =
+  rows.filter(
+    (player) => {
 
-              /*
-               * -------------------------------------------------
-               * HOSPITAL
-               * -------------------------------------------------
-               *
-               * If hospital time has expired,
-               * refresh immediately.
-               */
+      /*
+       * -------------------------------------------------
+       * HOSPITAL
+       * -------------------------------------------------
+       */
 
-              if (
-                player.status === "Hospital" &&
-                player.hospital_until !== null &&
-                player.hospital_until !== undefined
-              ) {
+      if (
+        player.status === "Hospital" &&
+        player.hospital_until !== null &&
+        player.hospital_until !== undefined
+      ) {
 
-                const hospitalUntil =
-                  Number(
-                    player.hospital_until
-                  );
+        const hospitalUntil =
+          Number(
+            player.hospital_until
+          );
 
+        if (
+          Number.isFinite(
+            hospitalUntil
+          ) &&
+          hospitalUntil <= now
+        ) {
 
-                if (
-                  Number.isFinite(
-                    hospitalUntil
-                  ) &&
-                  hospitalUntil <= now
-                ) {
+          return true;
 
-                  return true;
+        }
 
-                }
-
-              }
+      }
 
 
-              /*
-               * -------------------------------------------------
-               * NORMAL PLAYER REFRESH
-               * -------------------------------------------------
-               *
-               * Refresh non-hospital players
-               * every 60 seconds.
-               */
+      /*
+       * -------------------------------------------------
+       * NORMAL PLAYER REFRESH
+       * -------------------------------------------------
+       */
 
-              if (
-                player.status !== "Hospital" &&
-                player.updated_at
-              ) {
+      if (
+        player.status !== "Hospital" &&
+        player.updated_at
+      ) {
 
-                const updatedTime =
-                  new Date(
-                    player.updated_at +
-                    " UTC"
-                  ).getTime();
+        const updatedTime =
+          new Date(
+            player.updated_at +
+            " UTC"
+          ).getTime();
+
+        if (
+          Number.isFinite(
+            updatedTime
+          ) &&
+          Date.now() -
+            updatedTime >=
+            60000
+        ) {
+
+          return true;
+
+        }
+
+      }
 
 
-                if (
-                  Number.isFinite(
-                    updatedTime
-                  ) &&
-                  Date.now() -
-                    updatedTime >=
-                    60000
-                ) {
+      /*
+       * -------------------------------------------------
+       * BOUNTY REFRESH
+       * -------------------------------------------------
+       */
 
-                  return true;
+      if (
+        !player.bounty_updated_at
+      ) {
 
-                }
+        return true;
 
-              }
+      }
+
+
+      const bountyUpdatedTime =
+        new Date(
+          player.bounty_updated_at +
+          " UTC"
+        ).getTime();
+
+      if (
+        Number.isFinite(
+          bountyUpdatedTime
+        ) &&
+        Date.now() -
+          bountyUpdatedTime >=
+          30000
+      ) {
+
+        return true;
+
+      }
+
+
+      return false;
+
+    }
+  ).slice(0, MAX_REFRESHES_PER_RUN);
 
 
               /*
