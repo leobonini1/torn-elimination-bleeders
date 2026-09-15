@@ -486,7 +486,49 @@ function escapeHtml(value) {
 
 }
 /* Add or refresh a player */
-async funct
+async function addPlayer() {
+
+    const input = document.getElementById("playerId");
+    const playerId = input.value.trim();
+
+    if (!/^\d+$/.test(playerId)) {
+        alert("Please enter a valid TORN player ID.");
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `/api/player/${playerId}`
+        );
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(
+                data.error || "Failed to add player"
+            );
+        }
+
+        input.value = "";
+
+        await loadPlayers();
+
+        alert(
+            `${data.player.name} was added/refreshed successfully.`
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Failed to add player: " + error.message
+        );
+
+    }
+
+}
 /* Remove a player */
 async function removePlayer(playerId) {
 
