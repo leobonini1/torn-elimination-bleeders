@@ -1229,6 +1229,54 @@ async function refreshPlayers() {
 }
 
 
+/* Update hospital countdown every second */
+
+setInterval(() => {
+
+    if (players.length > 0) {
+
+        renderPlayers(players);
+
+    }
+
+}, 1000);
+
+
+/* Check players whose hospital timer has expired */
+
+setInterval(async () => {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/refresh-expired"
+            );
+
+        const data =
+            await response.json();
+
+        if (
+            data.success &&
+            data.checked > 0
+        ) {
+
+            await loadPlayers();
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Expired player refresh failed:",
+            error
+        );
+
+    }
+
+}, 10000);
+
+
 /* Initial load */
 
 async function initialize() {
