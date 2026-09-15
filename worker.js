@@ -1,6 +1,9 @@
 export default {
   async fetch(request, env) {
-    if (new URL(request.url).pathname === "/api/test-db") {
+    const url = new URL(request.url);
+
+    // Test D1
+    if (url.pathname === "/api/test-db") {
       try {
         const result = await env.DB
           .prepare("SELECT COUNT(*) AS count FROM players")
@@ -10,6 +13,25 @@ export default {
           success: true,
           players: result.count
         });
+      } catch (error) {
+        return Response.json({
+          success: false,
+          error: error.message
+        }, { status: 500 });
+      }
+    }
+
+    // Test TORN API
+    if (url.pathname === "/api/test-torn") {
+      try {
+        const response = await fetch(
+          "https://api.torn.com/user/?selections=basic&key=" +
+          encodeURIComponent(env.TORN_API_KEY)
+        );
+
+        const data = await response.json();
+
+        return Response.json(data);
       } catch (error) {
         return Response.json({
           success: false,
