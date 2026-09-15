@@ -535,26 +535,50 @@ function renderPlayers(list) {
                     : null;
 
 
-            let hospitalText = "—";
+           let hospitalText = "—";
 
-            if (hospital) {
+if (hospital) {
 
-                if (
-                    hospital.getTime() >
-                    Date.now()
-                ) {
+    const remaining =
+        hospital.getTime() - Date.now();
 
-                    hospitalText =
-                        hospital.toLocaleTimeString();
+    if (remaining > 0) {
 
-                } else {
+        const totalSeconds =
+            Math.floor(remaining / 1000);
 
-                    hospitalText =
-                        "Finished";
+        const hours =
+            Math.floor(totalSeconds / 3600);
 
-                }
+        const minutes =
+            Math.floor(
+                (totalSeconds % 3600) / 60
+            );
 
-            }
+        const seconds =
+            totalSeconds % 60;
+
+
+        if (hours > 0) {
+
+            hospitalText =
+                `${hours}h ${minutes}m ${seconds}s`;
+
+        } else {
+
+            hospitalText =
+                `${minutes}m ${seconds}s`;
+
+        }
+
+    } else {
+
+        hospitalText =
+            "Finished";
+
+    }
+
+}
 
 
             const status =
