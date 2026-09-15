@@ -1,137 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Elimination Dashboard</title>
 
     <style>
+
         * {
             box-sizing: border-box;
         }
-        button {
-    background: #292d31;
-    border: 1px solid #3a3f44;
-    color: white;
-    padding: 12px 18px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #34393e;
-}
 
         body {
             margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #111315;
+            padding: 30px;
+            background: #0f1115;
             color: #e8e8e8;
+            font-family: Arial, sans-serif;
         }
 
         .container {
-            max-width: 1400px;
-            margin: auto;
-            padding: 30px;
-        }
-
-        header {
-            margin-bottom: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         h1 {
-            margin: 0;
-            font-size: 32px;
-        }
-
-        .subtitle {
-            color: #888;
-            margin-top: 8px;
+            margin-bottom: 25px;
         }
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns:
+                repeat(4, 1fr);
             gap: 15px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         .stat {
-            background: #1b1e21;
-            border: 1px solid #292d31;
-            border-radius: 8px;
-            padding: 20px;
+            background: #181b21;
+            border: 1px solid #292e38;
+            border-radius: 10px;
+            padding: 18px;
         }
 
-        .stat-label {
+        .stat-title {
             color: #888;
             font-size: 13px;
             margin-bottom: 8px;
         }
 
         .stat-value {
-            font-size: 26px;
+            font-size: 25px;
             font-weight: bold;
         }
-        .remove-button {
-    margin-left: 10px;
-    padding: 6px 10px;
-    font-size: 12px;
-    background: #1b1e21;
-    border: 1px solid #555;
-    color: #aaa;
-}
-
-.remove-button:hover {
-    background: #333;
-    color: white;
-}
 
         .controls {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         input {
-            background: #1b1e21;
-            border: 1px solid #33383d;
+            background: #181b21;
             color: white;
-            padding: 12px;
-            border-radius: 6px;
-            width: 300px;
+            border: 1px solid #303640;
+            border-radius: 7px;
+            padding: 11px 13px;
             outline: none;
         }
 
         input:focus {
-            border-color: #777;
+            border-color: #555;
         }
 
-        .table-container {
-            background: #1b1e21;
-            border: 1px solid #292d31;
-            border-radius: 8px;
-            overflow-x: auto;
+        button {
+            background: #252a33;
+            color: white;
+            border: 1px solid #383f4b;
+            border-radius: 7px;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #303641;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .admin-controls {
+            display: none;
+            gap: 10px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .login-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .login-form {
+            display: none;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .admin-status {
+            color: #7ee787;
+            font-size: 14px;
+            display: none;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            background: #181b21;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 13px 15px;
+            text-align: left;
+            border-bottom: 1px solid #292e38;
         }
 
         th {
-            text-align: left;
-            color: #999;
-            font-size: 13px;
-            font-weight: normal;
-            padding: 15px;
-            border-bottom: 1px solid #292d31;
-        }
-
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #24272a;
+            color: #888;
+            font-size: 12px;
         }
 
         tr:last-child td {
@@ -142,143 +153,272 @@ button:hover {
             font-weight: bold;
         }
 
-        .bounty {
-            font-weight: bold;
+        .player a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .player a:hover {
+            text-decoration: underline;
+        }
+
+        .remove-button {
+            margin-left: 10px;
+            padding: 5px 8px;
+            font-size: 11px;
+            display: none;
+        }
+
+        .status {
+            color: #aaa;
         }
 
         .hospital {
-            color: #e5a84b;
-        }
-
-        .active {
-            color: #72c472;
+            color: #ff7777;
         }
 
         .empty {
             text-align: center;
-            padding: 40px;
+            padding: 30px;
             color: #777;
         }
 
-        .updated {
-            color: #666;
-            font-size: 12px;
-            margin-top: 10px;
-        }
-
         @media (max-width: 800px) {
+
             .stats {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns:
+                    repeat(2, 1fr);
             }
 
-            .container {
-                padding: 15px;
-            }
-
-            input {
+            .login-area {
                 width: 100%;
+                margin-left: 0;
             }
+
         }
+
     </style>
+
 </head>
+
 
 <body>
 
 <div class="container">
 
-    <header>
-        <h1>⚡ Elimination Dashboard</h1>
-
-        <div class="subtitle">
-            Player activity, bounties and hospital status
-        </div>
-
-        <div class="updated">
-            Last updated: <span id="lastUpdated">Never</span>
-        </div>
-    </header>
+    <h1>⚡ Elimination Dashboard</h1>
 
 
-    <section class="stats">
+    <!-- Statistics -->
+
+    <div class="stats">
 
         <div class="stat">
-            <div class="stat-label">PLAYERS TRACKED</div>
-            <div class="stat-value" id="playerCount">0</div>
+
+            <div class="stat-title">
+                Players Tracked
+            </div>
+
+            <div
+                class="stat-value"
+                id="playersCount"
+            >
+                0
+            </div>
+
         </div>
+
 
         <div class="stat">
-            <div class="stat-label">HOSPITALIZED</div>
-            <div class="stat-value" id="hospitalCount">0</div>
+
+            <div class="stat-title">
+                Hospitalized
+            </div>
+
+            <div
+                class="stat-value"
+                id="hospitalCount"
+            >
+                0
+            </div>
+
         </div>
+
 
         <div class="stat">
-            <div class="stat-label">TOTAL BOUNTIES</div>
-            <div class="stat-value" id="totalBounty">$0</div>
+
+            <div class="stat-title">
+                Total Bounties
+            </div>
+
+            <div
+                class="stat-value"
+                id="bountyCount"
+            >
+                $0
+            </div>
+
         </div>
+
 
         <div class="stat">
-            <div class="stat-label">ACTIVE RECENTLY</div>
-            <div class="stat-value" id="activeCount">0</div>
+
+            <div class="stat-title">
+                Active Recently
+            </div>
+
+            <div
+                class="stat-value"
+                id="activeCount"
+            >
+                0
+            </div>
+
         </div>
-
-    </section>
-
-
-<div class="controls">
-
-    <input
-        type="text"
-        id="playerId"
-        placeholder="Enter TORN player ID..."
-    >
-
-    <button onclick="addPlayer()">
-        Add Player
-    </button>
-
-    <button onclick="refreshPlayers()" id="refreshButton">
-        Refresh
-    </button>
-
-    <input
-        type="text"
-        id="search"
-        placeholder="Search player..."
-        oninput="filterPlayers()"
-    >
-
-</div>
-
-
-    <div class="table-container">
-
-        <table>
-
-            <thead>
-
-                <tr>
-                    <th>PLAYER</th>
-                    <th>BOUNTY</th>
-                    <th>LAST ACTIVE</th>
-                    <th>HOSPITAL</th>
-                    <th>STATUS</th>
-                </tr>
-
-            </thead>
-
-            <tbody id="playerTable">
-
-                <tr>
-                    <td colspan="5" class="empty">
-                        Loading players...
-                    </td>
-                </tr>
-
-            </tbody>
-
-        </table>
 
     </div>
+
+
+    <!-- Controls -->
+
+    <div class="controls">
+
+        <div
+            class="admin-controls"
+            id="adminControls"
+        >
+
+            <input
+                type="text"
+                id="playerId"
+                placeholder="Enter TORN player ID..."
+            >
+
+            <button
+                onclick="addPlayer()"
+            >
+                Add Player
+            </button>
+
+        </div>
+
+
+        <button
+            onclick="refreshPlayers()"
+            id="refreshButton"
+        >
+            Refresh
+        </button>
+
+
+        <input
+            type="text"
+            id="search"
+            placeholder="Search player..."
+            oninput="filterPlayers()"
+        >
+
+
+        <div class="login-area">
+
+            <div
+                class="login-form"
+                id="loginForm"
+            >
+
+                <input
+                    type="password"
+                    id="adminPassword"
+                    placeholder="Admin password"
+                >
+
+                <button
+                    onclick="login()"
+                >
+                    Login
+                </button>
+
+            </div>
+
+
+            <button
+                id="loginButton"
+                onclick="showLogin()"
+            >
+                Admin Login
+            </button>
+
+
+            <span
+                class="admin-status"
+                id="adminStatus"
+            >
+                ✓ Admin
+            </span>
+
+
+            <button
+                id="logoutButton"
+                onclick="logout()"
+                style="display: none;"
+            >
+                Logout
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- Player table -->
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    PLAYER
+                </th>
+
+                <th>
+                    BOUNTY
+                </th>
+
+                <th>
+                    LAST ACTIVE
+                </th>
+
+                <th>
+                    HOSPITAL
+                </th>
+
+                <th>
+                    STATUS
+                </th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody id="playersTable">
+
+            <tr>
+
+                <td
+                    colspan="5"
+                    class="empty"
+                >
+                    Loading...
+                </td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
 
 </div>
 
@@ -287,37 +427,64 @@ button:hover {
 
 let players = [];
 
+let isAdmin = false;
 
-/* Load players from D1 */
+
+/* Escape HTML */
+
+function escapeHtml(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+/* Load players */
+
 async function loadPlayers() {
 
     try {
 
-        const response = await fetch("/api/players");
+        const response =
+            await fetch("/api/players");
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
         if (!data.success) {
-            throw new Error(data.error || "Failed to load players");
+
+            throw new Error(
+                data.error ||
+                "Failed to load players"
+            );
+
         }
 
-        players = data.players || [];
+        players =
+            data.players || [];
 
         renderPlayers(players);
 
-        updateStats(players);
-
-        document.getElementById("lastUpdated").textContent =
-            new Date().toLocaleString();
+        updateStats();
 
     } catch (error) {
 
         console.error(error);
 
-        document.getElementById("playerTable").innerHTML = `
+        document.getElementById(
+            "playersTable"
+        ).innerHTML = `
             <tr>
-                <td colspan="5" class="empty">
-                    Failed to load players
+                <td
+                    colspan="5"
+                    class="empty"
+                >
+                    Failed to load players.
                 </td>
             </tr>
         `;
@@ -327,325 +494,732 @@ async function loadPlayers() {
 }
 
 
-/* Display players in the table */
-function renderPlayers(playerList) {
+/* Render players */
 
-    const table = document.getElementById("playerTable");
+function renderPlayers(list) {
 
-    if (playerList.length === 0) {
+    const table =
+        document.getElementById(
+            "playersTable"
+        );
+
+
+    if (!list.length) {
 
         table.innerHTML = `
             <tr>
-                <td colspan="5" class="empty">
-                    No players tracked yet
+                <td
+                    colspan="5"
+                    class="empty"
+                >
+                    No players tracked.
                 </td>
             </tr>
         `;
 
         return;
+
     }
 
 
-    table.innerHTML = playerList.map(player => {
+    table.innerHTML =
+        list.map(player => {
 
-        const bounty = Number(player.bounty || 0);
+            const hospital =
+                player.hospital_until
+                    ? new Date(
+                        Number(
+                            player.hospital_until
+                        ) * 1000
+                    )
+                    : null;
 
-        const hospital = player.hospital_until
-            ? formatHospital(player.hospital_until)
-            : "-";
 
-        const status = player.status || "-";
+            let hospitalText = "—";
+
+            if (hospital) {
+
+                if (
+                    hospital.getTime() >
+                    Date.now()
+                ) {
+
+                    hospitalText =
+                        hospital.toLocaleTimeString();
+
+                } else {
+
+                    hospitalText =
+                        "Finished";
+
+                }
+
+            }
 
 
-        return `
-            <tr>
+            const status =
+                player.status || "Unknown";
 
-        <td class="player">
-    <a
-        href="https://www.torn.com/profiles.php?XID=${player.id}"
-        target="_blank"
-        rel="noopener noreferrer"
-        style="color: inherit; text-decoration: none;"
-    >
-        ${escapeHtml(player.name)}
-    </a>
 
-    <button
-        class="remove-button"
-        onclick="removePlayer(${player.id})"
-    >
-        Remove
-    </button>
-</td>
+            return `
 
-                <td class="bounty">
-                    $${bounty.toLocaleString()}
-                </td>
+                <tr>
 
-                <td>
-                    ${escapeHtml(player.last_active || "-")}
-                </td>
+                    <td class="player">
 
-                <td class="${status === "Hospital" ? "hospital" : ""}">
-                    ${hospital}
-                </td>
+                        <a
+                            href="https://www.torn.com/profiles.php?XID=${player.id}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            ${escapeHtml(player.name)}
+                        </a>
 
-                <td class="${status === "Hospital" ? "hospital" : "active"}">
-                    ${escapeHtml(status)}
-                </td>
+                        <button
+                            class="remove-button"
+                            data-player-id="${player.id}"
+                            onclick="removePlayer(${player.id})"
+                            style="display: ${
+                                isAdmin
+                                    ? "inline-block"
+                                    : "none"
+                            };"
+                        >
+                            Remove
+                        </button>
 
-            </tr>
-        `;
+                    </td>
 
-    }).join("");
+
+                    <td>
+                        $${Number(
+                            player.bounty || 0
+                        ).toLocaleString()}
+                    </td>
+
+
+                    <td>
+                        ${escapeHtml(
+                            player.last_active ||
+                            "Unknown"
+                        )}
+                    </td>
+
+
+                    <td
+                        class="${
+                            status === "Hospital"
+                                ? "hospital"
+                                : ""
+                        }"
+                    >
+                        ${escapeHtml(
+                            hospitalText
+                        )}
+                    </td>
+
+
+                    <td class="status">
+                        ${escapeHtml(status)}
+                    </td>
+
+                </tr>
+
+            `;
+
+        }).join("");
 
 }
 
 
-/* Update dashboard statistics */
-function updateStats(playerList) {
+/* Update statistics */
 
-    const playerCount = playerList.length;
+function updateStats() {
 
-    const hospitalCount = playerList.filter(
-        player => player.status === "Hospital"
-    ).length;
-
-    const totalBounty = playerList.reduce(
-        (total, player) => total + Number(player.bounty || 0),
-        0
-    );
-
-    const activeCount = playerList.filter(
-        player => player.last_active &&
-        (
-            player.last_active.includes("minute") ||
-            player.last_active.includes("second")
-        )
-    ).length;
+    document.getElementById(
+        "playersCount"
+    ).textContent =
+        players.length;
 
 
-    document.getElementById("playerCount").textContent =
-        playerCount;
+    document.getElementById(
+        "hospitalCount"
+    ).textContent =
+        players.filter(
+            player =>
+                player.status === "Hospital"
+        ).length;
 
-    document.getElementById("hospitalCount").textContent =
-        hospitalCount;
 
-    document.getElementById("totalBounty").textContent =
-        "$" + totalBounty.toLocaleString();
+    const totalBounty =
+        players.reduce(
+            (total, player) =>
+                total +
+                Number(
+                    player.bounty || 0
+                ),
+            0
+        );
 
-    document.getElementById("activeCount").textContent =
-        activeCount;
+
+    document.getElementById(
+        "bountyCount"
+    ).textContent =
+        "$" +
+        totalBounty.toLocaleString();
+
+
+    document.getElementById(
+        "activeCount"
+    ).textContent =
+        players.filter(
+            player =>
+                player.last_active &&
+                !player.last_active
+                    .toLowerCase()
+                    .includes("day")
+        ).length;
 
 }
 
 
-/* Search players */
+/* Search */
+
 function filterPlayers() {
 
     const search =
-        document.getElementById("search").value.toLowerCase();
+        document.getElementById(
+            "search"
+        ).value
+        .toLowerCase()
+        .trim();
 
-    const filtered = players.filter(player =>
-        player.name.toLowerCase().includes(search)
-    );
+
+    if (!search) {
+
+        renderPlayers(players);
+
+        return;
+
+    }
+
+
+    const filtered =
+        players.filter(player =>
+            String(
+                player.name || ""
+            )
+            .toLowerCase()
+            .includes(search)
+        );
+
 
     renderPlayers(filtered);
 
 }
 
 
-/* Convert hospital timestamp to readable time */
-function formatHospital(timestamp) {
+/* Check login status */
 
-    const unix = Number(timestamp);
-
-    if (!unix) {
-        return "-";
-    }
-
-    const now = Math.floor(Date.now() / 1000);
-
-    const remaining = unix - now;
-
-    if (remaining <= 0) {
-        return "Finished";
-    }
-
-    const minutes = Math.floor(remaining / 60);
-
-    const hours = Math.floor(minutes / 60);
-
-    const mins = minutes % 60;
-
-
-    if (hours > 0) {
-        return `${hours}h ${mins}m`;
-    }
-
-    return `${mins}m`;
-}
-
-
-/* Prevent player names from inserting HTML */
-function escapeHtml(value) {
-
-    const div = document.createElement("div");
-
-    div.textContent = value;
-
-    return div.innerHTML;
-
-}
-    /* Refresh all tracked players from TORN */
-async function refreshPlayers() {
-
-    const button = document.getElementById("refreshButton");
-
-    button.disabled = true;
-    button.textContent = "Refreshing...";
+async function checkAuth() {
 
     try {
 
-        // Get the current list of tracked players
-        const response = await fetch("/api/players");
-        const data = await response.json();
+        const response =
+            await fetch(
+                "/api/auth-status"
+            );
 
-        if (!data.success) {
-            throw new Error(data.error || "Failed to load players");
+        const data =
+            await response.json();
+
+        setAdminState(
+            data.admin === true
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Auth check failed:",
+            error
+        );
+
+        setAdminState(false);
+
+    }
+
+}
+
+
+/* Update admin UI */
+
+function setAdminState(admin) {
+
+    isAdmin = admin;
+
+
+    document.getElementById(
+        "adminControls"
+    ).style.display =
+        admin ? "flex" : "none";
+
+
+    document.getElementById(
+        "loginButton"
+    ).style.display =
+        admin ? "none" : "inline-block";
+
+
+    document.getElementById(
+        "adminStatus"
+    ).style.display =
+        admin ? "inline" : "none";
+
+
+    document.getElementById(
+        "logoutButton"
+    ).style.display =
+        admin ? "inline-block" : "none";
+
+
+    document.getElementById(
+        "loginForm"
+    ).style.display =
+        "none";
+
+
+    renderPlayers(
+        players
+    );
+
+}
+
+
+/* Show login */
+
+function showLogin() {
+
+    document.getElementById(
+        "loginButton"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "loginForm"
+    ).style.display = "flex";
+
+
+    document.getElementById(
+        "adminPassword"
+    ).focus();
+
+}
+
+
+/* Login */
+
+async function login() {
+
+    const password =
+        document.getElementById(
+            "adminPassword"
+        ).value;
+
+
+    if (!password) {
+
+        alert(
+            "Please enter the admin password."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/login",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            password
+                        })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok ||
+            !data.success
+        ) {
+
+            throw new Error(
+                data.error ||
+                "Login failed"
+            );
+
         }
 
-        const trackedPlayers = data.players || [];
 
-        // Refresh every player from TORN
-        for (const player of trackedPlayers) {
+        document.getElementById(
+            "adminPassword"
+        ).value = "";
 
-            try {
 
-                await fetch(`/api/player/${player.id}`);
+        setAdminState(true);
 
-            } catch (error) {
-
-                console.error(
-                    `Failed to refresh player ${player.id}:`,
-                    error
-                );
-
-            }
-
-        }
-
-        // Load the newly updated data
-        await loadPlayers();
 
     } catch (error) {
 
         console.error(error);
 
         alert(
-            "Failed to refresh players: " + error.message
+            "Login failed: " +
+            error.message
         );
-
-    } finally {
-
-        button.disabled = false;
-        button.textContent = "Refresh";
 
     }
 
 }
-/* Add or refresh a player */
-async function addPlayer() {
 
-    const input = document.getElementById("playerId");
-    const playerId = input.value.trim();
 
-    if (!/^\d+$/.test(playerId)) {
-        alert("Please enter a valid TORN player ID.");
-        return;
+/* Allow Enter key to login */
+
+document.getElementById(
+    "adminPassword"
+).addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Enter") {
+
+            login();
+
+        }
+
     }
+);
+
+
+/* Logout */
+
+async function logout() {
 
     try {
 
-        const response = await fetch(
-            `/api/player/${playerId}`
+        await fetch(
+            "/api/logout",
+            {
+                method: "POST"
+            }
         );
 
-        const data = await response.json();
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+
+    setAdminState(false);
+
+}
+
+
+/* Add or refresh a player */
+
+async function addPlayer() {
+
+    if (!isAdmin) {
+
+        alert(
+            "Admin login required."
+        );
+
+        return;
+
+    }
+
+
+    const input =
+        document.getElementById(
+            "playerId"
+        );
+
+
+    const playerId =
+        input.value.trim();
+
+
+    if (!/^\d+$/.test(playerId)) {
+
+        alert(
+            "Please enter a valid TORN player ID."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/player/${playerId}`,
+                {
+                    method: "POST"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.status === 401
+        ) {
+
+            setAdminState(false);
+
+            throw new Error(
+                "Your admin session has expired."
+            );
+
+        }
+
 
         if (!data.success) {
+
             throw new Error(
-                data.error || "Failed to add player"
+                data.error ||
+                "Failed to add player"
             );
+
         }
+
 
         input.value = "";
 
+
         await loadPlayers();
+
 
         alert(
             `${data.player.name} was added/refreshed successfully.`
         );
 
+
     } catch (error) {
 
         console.error(error);
 
         alert(
-            "Failed to add player: " + error.message
+            "Failed to add player: " +
+            error.message
         );
 
     }
 
 }
+
+
 /* Remove a player */
-async function removePlayer(playerId) {
 
-    const player = players.find(
-        player => Number(player.id) === Number(playerId)
-    );
+async function removePlayer(
+    playerId
+) {
 
-    const playerName = player ? player.name : "this player";
+    if (!isAdmin) {
 
-    const confirmed = confirm(
-        `Are you sure you want to remove ${playerName}?`
-    );
+        alert(
+            "Admin login required."
+        );
+
+        return;
+
+    }
+
+
+    const player =
+        players.find(
+            player =>
+                Number(player.id) ===
+                Number(playerId)
+        );
+
+
+    const playerName =
+        player
+            ? player.name
+            : "this player";
+
+
+    const confirmed =
+        confirm(
+            `Are you sure you want to remove ${playerName}?`
+        );
+
 
     if (!confirmed) {
+
         return;
+
     }
+
 
     try {
 
-        const response = await fetch(
-            `/api/remove-player/${playerId}`
-        );
-
-        const data = await response.json();
-
-        if (!data.success) {
-            throw new Error(
-                data.error || "Failed to remove player"
+        const response =
+            await fetch(
+                `/api/remove-player/${playerId}`,
+                {
+                    method: "POST"
+                }
             );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.status === 401
+        ) {
+
+            setAdminState(false);
+
+            throw new Error(
+                "Your admin session has expired."
+            );
+
         }
 
+
+        if (!data.success) {
+
+            throw new Error(
+                data.error ||
+                "Failed to remove player"
+            );
+
+        }
+
+
         await loadPlayers();
+
 
     } catch (error) {
 
         console.error(error);
 
         alert(
-            "Failed to remove player: " + error.message
+            "Failed to remove player: " +
+            error.message
         );
 
     }
 
 }
-/* Load immediately */
-loadPlayers();
+
+
+/* Refresh all tracked players */
+
+async function refreshPlayers() {
+
+    const button =
+        document.getElementById(
+            "refreshButton"
+        );
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "Refreshing...";
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/refresh-players"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.error ||
+                "Failed to refresh players"
+            );
+
+        }
+
+
+        await loadPlayers();
+
+
+        console.log(
+            `Refreshed ${data.refreshed} players. Failed: ${data.failed}`
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Failed to refresh players: " +
+            error.message
+        );
+
+
+    } finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "Refresh";
+
+    }
+
+}
+
+
+/* Initial load */
+
+async function initialize() {
+
+    await checkAuth();
+
+    await loadPlayers();
+
+}
+
+
+initialize();
 
 </script>
 
 </body>
+
 </html>
