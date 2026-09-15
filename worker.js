@@ -44,14 +44,7 @@ export default {
         const data = await response.json();
 
         return Response.json(data);
-      } catch (error) {
-        return Response.json({
-          success: false,
-          error: error.message
-        }, { status: 500 });
-      }
-    }
-
+    
     // Test bounties for a specific player
     if (url.pathname.startsWith("/api/test-bounties/")) {
       try {
