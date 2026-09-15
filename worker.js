@@ -419,20 +419,23 @@ if (url.pathname === "/api/refresh-expired") {
     const now = Math.floor(Date.now() / 1000);
 
     /*
-     * Check:
+     * Refresh a player when:
      *
-     * 1. Players whose hospital timer has expired
+     * 1. Their hospital timer has expired
      *
      * OR
      *
-     * 2. Players who are NOT currently in hospital
-     *    and have not been checked in the last 10 seconds.
+     * 2. They are not currently in hospital and
+     *    have not been checked recently
      *
-     * This allows us to detect:
+     * OR
      *
-     * Okay -> Hospital
+     * 3. Their bounty has not been checked in the
+     *    last 30 seconds.
      *
-     * even after the previous hospital timer expired.
+     * The bounty timer is separate from updated_at
+     * because hospital/status updates can happen
+     * much more frequently than bounty updates.
      */
 
     const result = await env.DB
@@ -441,7 +444,8 @@ if (url.pathname === "/api/refresh-expired") {
           id,
           hospital_until,
           status,
-          updated_at
+          updated_at,
+          bounty_updated_at
         FROM players
         WHERE
           (
@@ -452,6 +456,11 @@ if (url.pathname === "/api/refresh-expired") {
           (
             status != 'Hospital'
             AND datetime(updated_at) <= datetime('now', '-10 seconds')
+          )
+          OR
+          (
+            bounty_updated_at IS NULL
+            OR datetime(bounty_updated_at) <= datetime('now', '-30 seconds')
           )
       `)
       .bind(now)
@@ -501,6 +510,10 @@ if (url.pathname === "/api/refresh-expired") {
                 data.profile || {};
 
 
+              /*
+               * Calculate the CURRENT total bounty.
+               */
+
               let totalBounty = 0;
 
 
@@ -529,16 +542,7 @@ if (url.pathname === "/api/refresh-expired") {
 
 
               /*
-               * Always use Torn's CURRENT status.
-               *
-               * If Hospital:
-               *     use the new hospital timer.
-               *
-               * If Okay:
-               *     set hospital_until to NULL.
-               *
-               * The query above will continue checking
-               * Okay players every 10 seconds.
+               * Always use Torn's current status.
                */
 
               const player = {
@@ -574,6 +578,13 @@ if (url.pathname === "/api/refresh-expired") {
               };
 
 
+              /*
+               * Update everything we received from Torn.
+               *
+               * bounty_updated_at is updated separately
+               * so we know when the bounty was last checked.
+               */
+
               await env.DB
                 .prepare(`
                   UPDATE players
@@ -583,8 +594,8 @@ if (url.pathname === "/api/refresh-expired") {
                     last_active = ?,
                     hospital_until = ?,
                     status = ?,
-                    updated_at =
-                      CURRENT_TIMESTAMP
+                    updated_at = CURRENT_TIMESTAMP,
+                    bounty_updated_at = CURRENT_TIMESTAMP
                   WHERE id = ?
                 `)
                 .bind(
