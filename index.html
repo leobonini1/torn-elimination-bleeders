@@ -3,15 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Elimination Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #111315;
+            color: #e8e8e8;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+            padding: 30px;
+        }
+
+        header {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-top: 8px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat {
+            background: #1b1e21;
+            border: 1px solid #292d31;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input {
+            background: #1b1e21;
+            border: 1px solid #33383d;
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            width: 300px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #777;
+        }
+
+        .table-container {
+            background: #1b1e21;
+            border: 1px solid #292d31;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            color: #999;
+            font-size: 13px;
+            font-weight: normal;
+            padding: 15px;
+            border-bottom: 1px solid #292d31;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #24272a;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .player {
+            font-weight: bold;
+        }
+
+        .bounty {
+            font-weight: bold;
+        }
+
+        .hospital {
+            color: #e5a84b;
+        }
+
+        .active {
+            color: #72c472;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #777;
+        }
+
+        .updated {
+            color: #666;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 800px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            input {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-    <h1>⚡ Elimination Bleeders</h1>
+<div class="container">
 
-    <p>Dashboard is working!</p>
+    <header>
+        <h1>⚡ Elimination Dashboard</h1>
+        <div class="subtitle">
+            Player activity, bounties and hospital status
+        </div>
 
-    <p>Players tracked: 0</p>
+        <div class="updated">
+            Last updated: <span id="lastUpdated">Never</span>
+        </div>
+    </header>
 
-</body>
-</html>
+
+    <section class="stats">
+
+        <div class="stat">
+            <div class="stat-label">PLAYERS TRACKED</div>
+            <div class="stat-value" id="playerCount">0</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-label">HOSPITALIZED</div>
+            <div class="stat-value" id="hospitalCount">0</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-label">TOTAL BOUNTIES</div>
+            <div class="stat-value" id="totalBounty">$0</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-label">ACTIVE RECENTLY</div>
+            <div class="stat-value" id="activeCount">0</div>
+        </div>
+
+    </section>
+
+
+    <div class="controls">
+
+        <input
+            type="text"
+            id="search"
+            placeholder="Search player..."
+            oninput="filterPlayers()"
+        >
+
+    </div>
+
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>PLAYER</th>
+                    <th>BOUNTY</th>
+                    <th>LAST ACTIVE</th>
+                    <th>HOSPITAL</th>
+                    <th>STATUS</th>
+                </tr>
