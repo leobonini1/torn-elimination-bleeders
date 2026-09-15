@@ -224,7 +224,7 @@ button:hover {
     </section>
 
 
-    <div class="controls">
+<div class="controls">
 
     <input
         type="text"
@@ -234,6 +234,10 @@ button:hover {
 
     <button onclick="addPlayer()">
         Add Player
+    </button>
+
+    <button onclick="refreshPlayers()" id="refreshButton">
+        Refresh
     </button>
 
     <input
@@ -491,6 +495,63 @@ function escapeHtml(value) {
     div.textContent = value;
 
     return div.innerHTML;
+
+}
+    /* Refresh all tracked players from TORN */
+async function refreshPlayers() {
+
+    const button = document.getElementById("refreshButton");
+
+    button.disabled = true;
+    button.textContent = "Refreshing...";
+
+    try {
+
+        // Get the current list of tracked players
+        const response = await fetch("/api/players");
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || "Failed to load players");
+        }
+
+        const trackedPlayers = data.players || [];
+
+        // Refresh every player from TORN
+        for (const player of trackedPlayers) {
+
+            try {
+
+                await fetch(`/api/player/${player.id}`);
+
+            } catch (error) {
+
+                console.error(
+                    `Failed to refresh player ${player.id}:`,
+                    error
+                );
+
+            }
+
+        }
+
+        // Load the newly updated data
+        await loadPlayers();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Failed to refresh players: " + error.message
+        );
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = "Refresh";
+
+    }
 
 }
 /* Add or refresh a player */
