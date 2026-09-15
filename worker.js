@@ -55,3 +55,14 @@ export default {
     return env.ASSETS.fetch(request);
   }
 };
+
+if (url.pathname === "/api/check-secret") {
+  const key = env.TORN_API_KEY;
+
+  return Response.json({
+    secretExists: !!key,
+    keyLength: key ? key.length : 0,
+    validFormat: key ? /^[A-Za-z0-9]{16}$/.test(key) : false,
+    envKeys: Object.keys(env)
+  });
+}
