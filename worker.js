@@ -416,26 +416,16 @@ if (url.pathname === "/api/refresh-expired") {
 
   try {
 
-    const now = Math.floor(Date.now() / 1000);
+    const now =
+      Math.floor(Date.now() / 1000);
+
 
     /*
-     * Refresh a player when:
+     * Get players that may need refreshing.
      *
-     * 1. Their hospital timer has expired
-     *
-     * OR
-     *
-     * 2. They are not currently in hospital and
-     *    have not been checked recently
-     *
-     * OR
-     *
-     * 3. Their bounty has not been checked in the
-     *    last 30 seconds.
-     *
-     * The bounty timer is separate from updated_at
-     * because hospital/status updates can happen
-     * much more frequently than bounty updates.
+     * We deliberately fetch the relevant timestamps/statuses
+     * and perform the hospital expiration check in JavaScript.
+     * This avoids SQLite timestamp/type issues.
      */
 
     const result = await env.DB
@@ -447,28 +437,114 @@ if (url.pathname === "/api/refresh-expired") {
           updated_at,
           bounty_updated_at
         FROM players
-        WHERE
-          (
-            hospital_until IS NOT NULL
-            AND CAST(hospital_until AS INTEGER) <= ?
-          )
-          OR
-          (
-            status != 'Hospital'
-            AND datetime(updated_at) <= datetime('now', '-10 seconds')
-          )
-          OR
-          (
-            bounty_updated_at IS NULL
-            OR datetime(bounty_updated_at) <= datetime('now', '-30 seconds')
-          )
       `)
-      .bind(now)
       .all();
 
 
-    const playerIds =
+    const rows =
       result.results || [];
+
+
+    /*
+     * Decide which players actually need
+     * a Torn API refresh.
+     */
+
+    const playerIds =
+      rows.filter((row) => {
+
+        /*
+         * HOSPITAL CHECK
+         *
+         * If the player is marked Hospital and
+         * their hospital timestamp has passed,
+         * refresh them immediately.
+         */
+
+        if (
+          row.status === "Hospital" &&
+          row.hospital_until !== null &&
+          row.hospital_until !== undefined
+        ) {
+
+          const hospitalUntil =
+            Number(row.hospital_until);
+
+          if (
+            Number.isFinite(hospitalUntil) &&
+            hospitalUntil <= now
+          ) {
+
+            return true;
+
+          }
+
+        }
+
+
+        /*
+         * NON-HOSPITAL STATUS CHECK
+         *
+         * Keep checking players that haven't
+         * been updated recently.
+         */
+
+        if (
+          row.status !== "Hospital" &&
+          row.updated_at
+        ) {
+
+          const updatedTime =
+            new Date(row.updated_at + " UTC")
+              .getTime();
+
+          if (
+            Number.isFinite(updatedTime) &&
+            Date.now() - updatedTime >= 10000
+          ) {
+
+            return true;
+
+          }
+
+        }
+
+
+        /*
+         * BOUNTY CHECK
+         *
+         * Refresh bounty information every
+         * 30 seconds.
+         */
+
+        if (
+          !row.bounty_updated_at
+        ) {
+
+          return true;
+
+        }
+
+
+        const bountyUpdatedTime =
+          new Date(
+            row.bounty_updated_at + " UTC"
+          ).getTime();
+
+
+        if (
+          Number.isFinite(bountyUpdatedTime) &&
+          Date.now() - bountyUpdatedTime >= 30000
+        ) {
+
+          return true;
+
+        }
+
+
+        return false;
+
+      });
 
 
     const refreshResults =
@@ -477,18 +553,21 @@ if (url.pathname === "/api/refresh-expired") {
         playerIds.map(
           async (row) => {
 
-            const playerId = row.id;
+            const playerId =
+              row.id;
+
 
             try {
 
-              const response = await fetch(
-                "https://api.torn.com/v2/user/" +
-                encodeURIComponent(playerId) +
-                "?selections=profile,bounties&key=" +
-                encodeURIComponent(
-                  env.TORN_API_KEY
-                )
-              );
+              const response =
+                await fetch(
+                  "https://api.torn.com/v2/user/" +
+                  encodeURIComponent(playerId) +
+                  "?selections=profile,bounties&key=" +
+                  encodeURIComponent(
+                    env.TORN_API_KEY
+                  )
+                );
 
 
               const data =
@@ -498,9 +577,16 @@ if (url.pathname === "/api/refresh-expired") {
               if (data.error) {
 
                 return {
-                  id: playerId,
-                  success: false,
-                  error: data.error
+
+                  id:
+                    playerId,
+
+                  success:
+                    false,
+
+                  error:
+                    data.error
+
                 };
 
               }
@@ -511,10 +597,11 @@ if (url.pathname === "/api/refresh-expired") {
 
 
               /*
-               * Calculate the CURRENT total bounty.
+               * Calculate CURRENT total bounty.
                */
 
-              let totalBounty = 0;
+              let totalBounty =
+                0;
 
 
               if (
@@ -525,7 +612,10 @@ if (url.pathname === "/api/refresh-expired") {
 
                 totalBounty =
                   data.bounties.reduce(
-                    (total, bounty) => {
+                    (
+                      total,
+                      bounty
+                    ) => {
 
                       return (
                         total +
@@ -542,8 +632,13 @@ if (url.pathname === "/api/refresh-expired") {
 
 
               /*
-               * Always use Torn's current status.
+               * Use Torn's CURRENT status.
                */
+
+              const isHospital =
+                profile.status?.state ===
+                "Hospital";
+
 
               const player = {
 
@@ -560,18 +655,20 @@ if (url.pathname === "/api/refresh-expired") {
 
                 last_active:
                   profile.last_action
-                    ?.relative ?? null,
+                    ?.relative ??
+                  null,
 
                 status:
                   profile.status
-                    ?.state ?? null,
+                    ?.state ??
+                  null,
 
                 hospital_until:
-                  profile.status
-                    ?.state === "Hospital"
+                  isHospital
                     ? (
                         profile.status
-                          ?.until ?? null
+                          ?.until ??
+                        null
                       )
                     : null
 
@@ -579,10 +676,7 @@ if (url.pathname === "/api/refresh-expired") {
 
 
               /*
-               * Update everything we received from Torn.
-               *
-               * bounty_updated_at is updated separately
-               * so we know when the bounty was last checked.
+               * Save the current Torn data.
                */
 
               await env.DB
@@ -594,8 +688,10 @@ if (url.pathname === "/api/refresh-expired") {
                     last_active = ?,
                     hospital_until = ?,
                     status = ?,
-                    updated_at = CURRENT_TIMESTAMP,
-                    bounty_updated_at = CURRENT_TIMESTAMP
+                    updated_at =
+                      CURRENT_TIMESTAMP,
+                    bounty_updated_at =
+                      CURRENT_TIMESTAMP
                   WHERE id = ?
                 `)
                 .bind(
