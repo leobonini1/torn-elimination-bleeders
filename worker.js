@@ -52,28 +52,28 @@ export default {
       }
     }
 
-    // Test bounties for a specific player
-    if (url.pathname.startsWith("/api/test-bounties/")) {
-      try {
-        const playerId = url.pathname.split("/").pop();
+ // Test bounties for a specific player
+if (url.pathname.startsWith("/api/test-bounties/")) {
+  try {
+    const playerId = url.pathname.split("/").pop();
 
-        const response = await fetch(
-          "https://api.torn.com/user/" +
-          encodeURIComponent(playerId) +
-          "/bounties?key=" +
-          encodeURIComponent(env.TORN_API_KEY)
-        );
+    const response = await fetch(
+      "https://api.torn.com/user/" +
+      encodeURIComponent(playerId) +
+      "?selections=bounties&key=" +
+      encodeURIComponent(env.TORN_API_KEY)
+    );
 
-        const data = await response.json();
+    const data = await response.json();
 
-        return Response.json(data);
-      } catch (error) {
-        return Response.json({
-          success: false,
-          error: error.message
-        }, { status: 500 });
-      }
-    }
+    return Response.json(data);
+  } catch (error) {
+    return Response.json({
+      success: false,
+      error: error.message
+    }, { status: 500 });
+  }
+}
 
     // Get information for a specific player
     if (url.pathname.startsWith("/api/player/")) {
