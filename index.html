@@ -157,14 +157,6 @@
     text-decoration: none;
 }
 
-.player a.has-bounty {
-    color: #7ee787;
-}
-
-.player a.no-bounty {
-    color: #ff7777;
-}
-
 .player a:hover {
     text-decoration: underline;
 }
@@ -619,10 +611,15 @@ if (
 
                     <td class="player">
 
-                        <a
+                       <a
     href="https://www.torn.com/bounties.php?p=add&XID=${player.id}"
     target="_blank"
     rel="noopener noreferrer"
+    style="color: ${
+        Number(player.bounty || 0) > 0
+            ? "#7ee787"
+            : "#ff7777"
+    } !important;"
 >
     ${escapeHtml(player.name)}
 </a>
