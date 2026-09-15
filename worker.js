@@ -138,36 +138,7 @@ export default {
             : null
         };
 
-        // Save player to D1
-        await env.DB
-          .prepare(`
-            INSERT INTO players (
-              id,
-              name,
-              bounty,
-              last_active,
-              hospital_until,
-              status,
-              updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(id) DO UPDATE SET
-              name = excluded.name,
-              bounty = excluded.bounty,
-              last_active = excluded.last_active,
-              hospital_until = excluded.hospital_until,
-              status = excluded.status,
-              updated_at = CURRENT_TIMESTAMP
-          `)
-          .bind(
-            player.id,
-            player.name,
-            player.bounty,
-            player.last_active,
-            player.hospital_until,
-            player.status
-          )
-          .run();
+       
 
         return Response.json({
           success: true,
