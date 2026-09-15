@@ -104,7 +104,35 @@ export default {
         }, { status: 500 });
       }
     }
+// Remove a player from D1
+if (url.pathname.startsWith("/api/remove-player/")) {
+  try {
+    const playerId = url.pathname.split("/").pop();
 
+    if (!/^\d+$/.test(playerId)) {
+      return Response.json({
+        success: false,
+        error: "Invalid player ID"
+      }, { status: 400 });
+    }
+
+    await env.DB
+      .prepare("DELETE FROM players WHERE id = ?")
+      .bind(Number(playerId))
+      .run();
+
+    return Response.json({
+      success: true,
+      id: Number(playerId)
+    });
+
+  } catch (error) {
+    return Response.json({
+      success: false,
+      error: error.message
+    }, { status: 500 });
+  }
+}
     // Get information for a specific player
     if (url.pathname.startsWith("/api/player/")) {
       try {
