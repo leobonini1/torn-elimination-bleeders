@@ -21,16 +21,23 @@ export default {
       }
     }
 
-    // Test TORN API connection
+    // Diagnose Cloudflare secret
+    if (url.pathname === "/api/check-secret") {
+      const key = env.TORN_API_KEY;
+
+      return Response.json({
+        secretExists: !!key,
+        keyLength: key ? key.length : 0,
+        validFormat: key ? /^[A-Za-z0-9]{16}$/.test(key) : false
+      });
+    }
+
+    // Test TORN API
     if (url.pathname === "/api/test-torn") {
       try {
         const response = await fetch(
-          "https://api.torn.com/user/?selections=basic",
-          {
-            headers: {
-              "Authorization": `ApiKey ${env.TORN_API_KEY}`
-            }
-          }
+          "https://api.torn.com/user/?selections=basic&key=" +
+          encodeURIComponent(env.TORN_API_KEY)
         );
 
         const data = await response.json();
@@ -44,7 +51,7 @@ export default {
       }
     }
 
-    // Serve the dashboard
+    // Serve dashboard
     return env.ASSETS.fetch(request);
   }
 };
