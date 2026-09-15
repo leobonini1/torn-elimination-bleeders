@@ -22,7 +22,7 @@ export default {
       }
     }
 
-    // Check that the TORN API secret is available
+    // Check TORN API secret
     if (url.pathname === "/api/check-secret") {
       const key = env.TORN_API_KEY;
 
@@ -114,7 +114,7 @@ export default {
 
         return Response.json({
           success: true,
-          player
+          player: player
         });
       } catch (error) {
         return Response.json({
