@@ -33,7 +33,7 @@ export default {
       });
     }
 
-    // Test TORN API
+    // Test the TORN API
     if (url.pathname === "/api/test-torn") {
       try {
         const response = await fetch(
@@ -44,7 +44,14 @@ export default {
         const data = await response.json();
 
         return Response.json(data);
-    
+      } catch (error) {
+        return Response.json({
+          success: false,
+          error: error.message
+        }, { status: 500 });
+      }
+    }
+
     // Test bounties for a specific player
     if (url.pathname.startsWith("/api/test-bounties/")) {
       try {
@@ -68,7 +75,8 @@ export default {
       }
     }
 
-    // Get information for a specific player
+    // Get player information
+    // TEMPORARY: return the complete raw API v2 response
     if (url.pathname.startsWith("/api/player/")) {
       try {
         const playerId = url.pathname.split("/").pop();
@@ -80,7 +88,6 @@ export default {
           }, { status: 400 });
         }
 
-        // Request profile and bounties using API v2
         const response = await fetch(
           "https://api.torn.com/v2/user/" +
           encodeURIComponent(playerId) +
@@ -90,53 +97,9 @@ export default {
 
         const data = await response.json();
 
-        if (data.error) {
-          return Response.json({
-            success: false,
-            error: data.error
-          }, { status: 400 });
-        }
-
-        // Calculate total bounty
-        let totalBounty = 0;
-
-        if (Array.isArray(data.bounties)) {
-          totalBounty = data.bounties.reduce((total, bounty) => {
-            return total + Number(bounty.amount || 0);
-          }, 0);
-        }
-
-        // Convert undefined values to null before using D1
-        const player = {
-          id: data.player_id ?? Number(playerId),
-          name: data.name ?? null,
-          level: data.level ?? null,
-
-          bounty: totalBounty,
-
-          last_active: data.last_action?.relative ?? null,
-          last_active_status: data.last_action?.status ?? null,
-          last_active_timestamp: data.last_action?.timestamp ?? null,
-
-          status: data.status?.state ?? null,
-          status_description: data.status?.description ?? null,
-          hospital_until: data.status?.until ?? null,
-
-          elimination: data.competition?.name === "Elimination"
-            ? {
-                score: data.competition?.score ?? 0,
-                team: data.competition?.team ?? null,
-                attacks: data.competition?.attacks ?? 0
-              }
-            : null
-        };
-
-       
-
-        return Response.json({
-          success: true,
-          player: player
-        });
+        // Return the raw v2 response so we can inspect
+        // exactly how TORN structures the data.
+        return Response.json(data);
 
       } catch (error) {
         return Response.json({
