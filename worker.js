@@ -1,4 +1,4 @@
-```javascript
+javascript
 async function createSignature(secret, message) {
 
   const key = await crypto.subtle.importKey(
@@ -1510,4 +1510,3 @@ export default {
   }
 
 };
-```
