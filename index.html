@@ -356,8 +356,16 @@ function renderPlayers(playerList) {
         return `
             <tr>
 
-              <td class="player">
-    ${escapeHtml(player.name)}
+        <td class="player">
+    <a
+        href="https://www.torn.com/profiles.php?XID=${player.id}"
+        target="_blank"
+        rel="noopener noreferrer"
+        style="color: inherit; text-decoration: none;"
+    >
+        ${escapeHtml(player.name)}
+    </a>
+
     <button
         class="remove-button"
         onclick="removePlayer(${player.id})"
