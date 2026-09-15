@@ -75,8 +75,7 @@ export default {
       }
     }
 
-    // Get player information
-    // TEMPORARY: return the complete raw API v2 response
+    // Get information for a specific player
     if (url.pathname.startsWith("/api/player/")) {
       try {
         const playerId = url.pathname.split("/").pop();
@@ -88,6 +87,7 @@ export default {
           }, { status: 400 });
         }
 
+        // Request profile and bounties using API v2
         const response = await fetch(
           "https://api.torn.com/v2/user/" +
           encodeURIComponent(playerId) +
@@ -97,9 +97,84 @@ export default {
 
         const data = await response.json();
 
-        // Return the raw v2 response so we can inspect
-        // exactly how TORN structures the data.
-        return Response.json(data);
+        if (data.error) {
+          return Response.json({
+            success: false,
+            error: data.error
+          }, { status: 400 });
+        }
+
+        // The API v2 profile data is inside data.profile
+        const profile = data.profile || {};
+
+        // Calculate total bounty
+        let totalBounty = 0;
+
+        if (Array.isArray(data.bounties)) {
+          totalBounty = data.bounties.reduce((total, bounty) => {
+            return total + Number(bounty.amount || 0);
+          }, 0);
+        }
+
+        const player = {
+          id: profile.id ?? Number(playerId),
+          name: profile.name ?? "Unknown",
+          level: profile.level ?? null,
+
+          bounty: totalBounty,
+
+          last_active: profile.last_action?.relative ?? null,
+          last_active_status: profile.last_action?.status ?? null,
+          last_active_timestamp: profile.last_action?.timestamp ?? null,
+
+          status: profile.status?.state ?? null,
+          status_description: profile.status?.description ?? null,
+          hospital_until: profile.status?.until ?? null,
+
+          elimination: profile.competition?.name === "Elimination"
+            ? {
+                score: profile.competition.score ?? 0,
+                team: profile.competition.team ?? null,
+                attacks: profile.competition.attacks ?? 0
+              }
+            : null
+        };
+
+        // Save player to D1
+        await env.DB
+          .prepare(`
+            INSERT INTO players (
+              id,
+              name,
+              bounty,
+              last_active,
+              hospital_until,
+              status,
+              updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(id) DO UPDATE SET
+              name = excluded.name,
+              bounty = excluded.bounty,
+              last_active = excluded.last_active,
+              hospital_until = excluded.hospital_until,
+              status = excluded.status,
+              updated_at = CURRENT_TIMESTAMP
+          `)
+          .bind(
+            player.id,
+            player.name,
+            player.bounty,
+            player.last_active,
+            player.hospital_until,
+            player.status
+          )
+          .run();
+
+        return Response.json({
+          success: true,
+          player: player
+        });
 
       } catch (error) {
         return Response.json({
