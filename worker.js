@@ -20,13 +20,24 @@ export default {
         }, { status: 500 });
       }
     }
+if (url.pathname === "/api/test-torn") {
+  try {
+    const response = await fetch(
+      "https://api.torn.com/user/?selections=basic",
+      {
+        headers: {
+          "Authorization": `ApiKey ${env.TORN_API_KEY}`
+        }
+      }
+    );
 
-  if (url.pathname === "/api/test-torn") {
-  return Response.json({
-    secretExists: !!env.TORN_API_KEY,
-    keyLength: env.TORN_API_KEY ? env.TORN_API_KEY.length : 0,
-    keyFormat: env.TORN_API_KEY
-      ? /^[A-Za-z0-9]{16}$/.test(env.TORN_API_KEY)
-      : false
-  });
+    const data = await response.json();
+
+    return Response.json(data);
+  } catch (error) {
+    return Response.json({
+      success: false,
+      error: error.message
+    }, { status: 500 });
+  }
 }
