@@ -52,13 +52,13 @@ export default {
       }
     }
 
- // Test bounties for a specific player
+// Test bounties for a specific player
 if (url.pathname.startsWith("/api/test-bounties/")) {
   try {
     const playerId = url.pathname.split("/").pop();
 
     const response = await fetch(
-      "https://api.torn.com/user/" +
+      "https://api.torn.com/v2/user/" +
       encodeURIComponent(playerId) +
       "?selections=bounties&key=" +
       encodeURIComponent(env.TORN_API_KEY)
