@@ -52,28 +52,28 @@ export default {
       }
     }
 
-// Test bounties for a specific player
-if (url.pathname.startsWith("/api/test-bounties/")) {
-  try {
-    const playerId = url.pathname.split("/").pop();
+    // Test bounties for a specific player
+    if (url.pathname.startsWith("/api/test-bounties/")) {
+      try {
+        const playerId = url.pathname.split("/").pop();
 
-    const response = await fetch(
-      "https://api.torn.com/v2/user/" +
-      encodeURIComponent(playerId) +
-      "?selections=bounties&key=" +
-      encodeURIComponent(env.TORN_API_KEY)
-    );
+        const response = await fetch(
+          "https://api.torn.com/v2/user/" +
+          encodeURIComponent(playerId) +
+          "?selections=bounties&key=" +
+          encodeURIComponent(env.TORN_API_KEY)
+        );
 
-    const data = await response.json();
+        const data = await response.json();
 
-    return Response.json(data);
-  } catch (error) {
-    return Response.json({
-      success: false,
-      error: error.message
-    }, { status: 500 });
-  }
-}
+        return Response.json(data);
+      } catch (error) {
+        return Response.json({
+          success: false,
+          error: error.message
+        }, { status: 500 });
+      }
+    }
 
     // Get information for a specific player
     if (url.pathname.startsWith("/api/player/")) {
@@ -87,10 +87,11 @@ if (url.pathname.startsWith("/api/test-bounties/")) {
           }, { status: 400 });
         }
 
+        // Request profile and bounties together using API v2
         const response = await fetch(
-          "https://api.torn.com/user/" +
+          "https://api.torn.com/v2/user/" +
           encodeURIComponent(playerId) +
-          "?selections=profile&key=" +
+          "?selections=profile,bounties&key=" +
           encodeURIComponent(env.TORN_API_KEY)
         );
 
@@ -103,32 +104,73 @@ if (url.pathname.startsWith("/api/test-bounties/")) {
           }, { status: 400 });
         }
 
+        // Calculate total bounty
+        let totalBounty = 0;
+
+        if (Array.isArray(data.bounties)) {
+          totalBounty = data.bounties.reduce((total, bounty) => {
+            return total + Number(bounty.amount || 0);
+          }, 0);
+        }
+
+        const player = {
+          id: data.player_id,
+          name: data.name,
+          level: data.level,
+
+          bounty: totalBounty,
+
+          last_active: data.last_action?.relative || null,
+          last_active_status: data.last_action?.status || null,
+          last_active_timestamp: data.last_action?.timestamp || null,
+
+          status: data.status?.state || null,
+          status_description: data.status?.description || null,
+          hospital_until: data.status?.until || null,
+
+          elimination: data.competition?.name === "Elimination"
+            ? {
+                score: data.competition.score || 0,
+                team: data.competition.team || null,
+                attacks: data.competition.attacks || 0
+              }
+            : null
+        };
+
+        // Save player to D1
+        await env.DB
+          .prepare(`
+            INSERT INTO players (
+              id,
+              name,
+              bounty,
+              last_active,
+              hospital_until,
+              status,
+              updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(id) DO UPDATE SET
+              name = excluded.name,
+              bounty = excluded.bounty,
+              last_active = excluded.last_active,
+              hospital_until = excluded.hospital_until,
+              status = excluded.status,
+              updated_at = CURRENT_TIMESTAMP
+          `)
+          .bind(
+            player.id,
+            player.name,
+            player.bounty,
+            player.last_active,
+            player.hospital_until,
+            player.status
+          )
+          .run();
+
         return Response.json({
           success: true,
-          player: {
-            id: data.player_id,
-            name: data.name,
-            level: data.level,
-
-            last_active: data.last_action?.relative || null,
-            last_active_status: data.last_action?.status || null,
-            last_active_timestamp: data.last_action?.timestamp || null,
-
-            status: data.status?.state || null,
-            status_description: data.status?.description || null,
-            hospital_until: data.status?.until || null,
-
-            elimination: data.competition?.name === "Elimination"
-              ? {
-                  score: data.competition.score || 0,
-                  team: data.competition.team || null,
-                  attacks: data.competition.attacks || 0
-                }
-              : null
-          },
-
-          // Keep the original TORN response available for debugging
-          raw: data
+          player: player
         });
 
       } catch (error) {
@@ -143,3 +185,4 @@ if (url.pathname.startsWith("/api/test-bounties/")) {
     return env.ASSETS.fetch(request);
   }
 };
+
