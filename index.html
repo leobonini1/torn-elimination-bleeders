@@ -504,13 +504,8 @@ function renderPlayers(list) {
 
 
     /*
-     * Sort by hospital timer.
-     *
-     * Players currently in hospital are sorted
-     * by who leaves hospital first.
-     *
-     * Players not in hospital are placed at
-     * the bottom.
+     * Sort hospitalized players by
+     * who leaves hospital first.
      */
 
     list = [...list].sort((a, b) => {
@@ -553,69 +548,95 @@ function renderPlayers(list) {
     table.innerHTML =
         list.map(player => {
 
-            const hospital =
-                player.hospital_until
-                    ? new Date(
-                        Number(
-                            player.hospital_until
-                        ) * 1000
-                    )
-                    : null;
-
-
             let hospitalText = "—";
 
 
+            /*
+             * Only show a timer when Torn says
+             * the player is currently hospitalized.
+             */
+
             if (
                 player.status === "Hospital" &&
-                hospital
+                player.hospital_until !== null &&
+                player.hospital_until !== undefined
             ) {
 
-                const remaining =
-                    hospital.getTime() -
-                    Date.now();
+                const hospitalUntil =
+                    Number(
+                        player.hospital_until
+                    );
 
 
-                if (remaining > 0) {
+                /*
+                 * Make sure the timestamp is valid.
+                 */
 
-                    const totalSeconds =
-                        Math.floor(
-                            remaining / 1000
-                        );
+                if (
+                    Number.isFinite(
+                        hospitalUntil
+                    ) &&
+                    hospitalUntil > 0
+                ) {
 
-
-                    const hours =
-                        Math.floor(
-                            totalSeconds / 3600
-                        );
-
-
-                    const minutes =
-                        Math.floor(
-                            (totalSeconds % 3600) / 60
-                        );
+                    const remaining =
+                        (
+                            hospitalUntil * 1000
+                        ) -
+                        Date.now();
 
 
-                    const seconds =
-                        totalSeconds % 60;
+                    if (remaining > 0) {
+
+                        const totalSeconds =
+                            Math.floor(
+                                remaining / 1000
+                            );
 
 
-                    if (hours > 0) {
+                        const hours =
+                            Math.floor(
+                                totalSeconds / 3600
+                            );
 
-                        hospitalText =
-                            `${hours}h ${minutes}m ${seconds}s`;
+
+                        const minutes =
+                            Math.floor(
+                                (
+                                    totalSeconds % 3600
+                                ) / 60
+                            );
+
+
+                        const seconds =
+                            totalSeconds % 60;
+
+
+                        if (hours > 0) {
+
+                            hospitalText =
+                                `${hours}h ${minutes}m ${seconds}s`;
+
+                        } else {
+
+                            hospitalText =
+                                `${minutes}m ${seconds}s`;
+
+                        }
 
                     } else {
 
+                        /*
+                         * The local countdown has expired.
+                         *
+                         * The backend refresh will shortly
+                         * ask Torn for the player's new status.
+                         */
+
                         hospitalText =
-                            `${minutes}m ${seconds}s`;
+                            "Checking...";
 
                     }
-
-                } else {
-
-                    hospitalText =
-                        "Finished";
 
                 }
 
