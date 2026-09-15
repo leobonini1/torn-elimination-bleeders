@@ -163,6 +163,7 @@
 
     <header>
         <h1>⚡ Elimination Dashboard</h1>
+
         <div class="subtitle">
             Player activity, bounties and hospital status
         </div>
@@ -223,4 +224,232 @@
                     <th>HOSPITAL</th>
                     <th>STATUS</th>
                 </tr>
-<!-- D1 binding deployment -->
+
+            </thead>
+
+            <tbody id="playerTable">
+
+                <tr>
+                    <td colspan="5" class="empty">
+                        Loading players...
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let players = [];
+
+
+/* Load players from D1 */
+async function loadPlayers() {
+
+    try {
+
+        const response = await fetch("/api/players");
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || "Failed to load players");
+        }
+
+        players = data.players || [];
+
+        renderPlayers(players);
+
+        updateStats(players);
+
+        document.getElementById("lastUpdated").textContent =
+            new Date().toLocaleString();
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById("playerTable").innerHTML = `
+            <tr>
+                <td colspan="5" class="empty">
+                    Failed to load players
+                </td>
+            </tr>
+        `;
+
+    }
+
+}
+
+
+/* Display players in the table */
+function renderPlayers(playerList) {
+
+    const table = document.getElementById("playerTable");
+
+    if (playerList.length === 0) {
+
+        table.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty">
+                    No players tracked yet
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+
+    table.innerHTML = playerList.map(player => {
+
+        const bounty = Number(player.bounty || 0);
+
+        const hospital = player.hospital_until
+            ? formatHospital(player.hospital_until)
+            : "-";
+
+        const status = player.status || "-";
+
+
+        return `
+            <tr>
+
+                <td class="player">
+                    ${escapeHtml(player.name)}
+                </td>
+
+                <td class="bounty">
+                    $${bounty.toLocaleString()}
+                </td>
+
+                <td>
+                    ${escapeHtml(player.last_active || "-")}
+                </td>
+
+                <td class="${status === "Hospital" ? "hospital" : ""}">
+                    ${hospital}
+                </td>
+
+                <td class="${status === "Hospital" ? "hospital" : "active"}">
+                    ${escapeHtml(status)}
+                </td>
+
+            </tr>
+        `;
+
+    }).join("");
+
+}
+
+
+/* Update dashboard statistics */
+function updateStats(playerList) {
+
+    const playerCount = playerList.length;
+
+    const hospitalCount = playerList.filter(
+        player => player.status === "Hospital"
+    ).length;
+
+    const totalBounty = playerList.reduce(
+        (total, player) => total + Number(player.bounty || 0),
+        0
+    );
+
+    const activeCount = playerList.filter(
+        player => player.last_active &&
+        (
+            player.last_active.includes("minute") ||
+            player.last_active.includes("second")
+        )
+    ).length;
+
+
+    document.getElementById("playerCount").textContent =
+        playerCount;
+
+    document.getElementById("hospitalCount").textContent =
+        hospitalCount;
+
+    document.getElementById("totalBounty").textContent =
+        "$" + totalBounty.toLocaleString();
+
+    document.getElementById("activeCount").textContent =
+        activeCount;
+
+}
+
+
+/* Search players */
+function filterPlayers() {
+
+    const search =
+        document.getElementById("search").value.toLowerCase();
+
+    const filtered = players.filter(player =>
+        player.name.toLowerCase().includes(search)
+    );
+
+    renderPlayers(filtered);
+
+}
+
+
+/* Convert hospital timestamp to readable time */
+function formatHospital(timestamp) {
+
+    const unix = Number(timestamp);
+
+    if (!unix) {
+        return "-";
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+
+    const remaining = unix - now;
+
+    if (remaining <= 0) {
+        return "Finished";
+    }
+
+    const minutes = Math.floor(remaining / 60);
+
+    const hours = Math.floor(minutes / 60);
+
+    const mins = minutes % 60;
+
+
+    if (hours > 0) {
+        return `${hours}h ${mins}m`;
+    }
+
+    return `${mins}m`;
+}
+
+
+/* Prevent player names from inserting HTML */
+function escapeHtml(value) {
+
+    const div = document.createElement("div");
+
+    div.textContent = value;
+
+    return div.innerHTML;
+
+}
+
+
+/* Load immediately */
+loadPlayers();
+
+</script>
+
+</body>
+</html>
