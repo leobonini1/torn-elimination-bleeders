@@ -33,29 +33,6 @@ export default {
     }
 
     // Test TORN API
-    if (url.pathname === "/api/test-torn") {
-      try {
-        const response = await fetch(
-          "https://api.torn.com/user/?selections=basic&key=" +
-          encodeURIComponent(env.TORN_API_KEY)
-        );
-
-        const data = await response.json();
-
-        return Response.json(data);
-      } catch (error) {
-        return Response.json({
-          success: false,
-          error: error.message
-        }, { status: 500 });
-      }
-    }
-
-    // Serve dashboard
-    return env.ASSETS.fetch(request);
-  }
-};
-
 if (url.pathname === "/api/check-secret") {
   const key = env.TORN_API_KEY;
 
